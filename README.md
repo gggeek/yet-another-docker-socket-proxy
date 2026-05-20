@@ -21,6 +21,7 @@ This means f.e. restricting a client to
 This is meant to be:
 - a rewrite of https://github.com/FoxxMD/docker-proxy-filter in PHP, to compare LoCs and runtime latency/scalability/memory
 - a playground for getting my feet wet with FrankenPHP woker mode and embedded scripts
+- an MVP project (initial releases will rely on bundling HAProxy and DPFP; later releases might do away with it)
 
 A small, forward proxy for filtering the content and responses of Docker API responses to only those you want to expose.
 
