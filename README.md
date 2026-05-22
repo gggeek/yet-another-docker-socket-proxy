@@ -24,12 +24,18 @@ This means f.e. restricting a client to
 
 It was inspired by https://blog.foxxmd.dev/posts/restricting-socket-proxy-by-container/
 
-## WORK In PROGRESS
+## WORK IN PROGRESS
 
 This is meant to be:
 - a rewrite of https://github.com/FoxxMD/docker-proxy-filter in PHP, to compare LoCs and runtime latency/scalability/memory
 - a playground for getting my feet wet with FrankenPHP woker mode and embedded scripts
 - an MVP project
+
+The following features are not implemented yet:
+- loading custom configuration
+- matching requests accordingly
+- filtering the responses accordingly
+- proxying a docker network socket specified via `tcp:`
 
 *Stay tuned*
 
@@ -41,21 +47,21 @@ There are no images produced yet.
 
 For now:
 1. `git clone` this project
-2. run
+2. run `composer install --classmap-authoritative`
+3. run
    ```shell
    docker run \
-     --rm \
-     -v .:/app \
-     -p 2375:80 \
-     -p 443:443 \
-     -p 443:443/udp \
-     -e SERVER_NAME=$(hostname) \
-     -v /var/run/docker.sock:/var/run/docker.sock \
-     -v ./dpfp.log:/tmp/dpfp.log \
-     dunglas/frankenphp
+       --rm \
+       -p 0.0.0.0:2375:80 \
+       -v .:/app:ro \
+       -v ./build/docker/Caddyfile:/etc/frankenphp/Caddyfile:ro \
+       -v /var/run/docker.sock:/var/run/docker.sock:ro \
+       -e $CADDY_EXTRA_GLOBAL_OPTIONS=debug \
+       dunglas/frankenphp
    ```
-3. export `DOCKER_HOST=tcp://127.0.0.1:2375`
-4. test: `sudo docker ps` -> this should not show any containers, despite the fact that there is one running
+4. export `DOCKER_HOST=tcp://127.0.0.1:2375`
+5. test: `sudo docker ps` - this should not show any containers, despite the fact that there is one running,
+   whereas `sudo docker version` should show the Server information
 
 ### With FrankenPHP
 ...

@@ -25,6 +25,7 @@ class FileLogger extends AbstractLogger
     public function log($level, string|\Stringable $message, array $context = []): void
     {
         if ($this->isHandling($level)) {
+            # @todo log a message using error_log of this fails?
             file_put_contents($this->fileName, $this->formatMessage($level, $message, $context) . "\n", FILE_APPEND);
         }
     }

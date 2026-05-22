@@ -115,7 +115,7 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $this->debug("Received request: " .var_export($request, true));
+        $this->debug("Received request: " . $this->request2Log($request));
 
         if ($this->isAccepted($request)) {
             $response = $this->forward($request);
@@ -149,15 +149,23 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
     protected function forward(ServerRequestInterface $request): ResponseInterface
     {
         try {
+            $client = $this->client;
             // avoid dns resolution, in case the request we get uses a hostname
             if (str_starts_with($this->upstream, '/') && method_exists($this->client, 'withOptions')) {
-                $client = $this->client->withOptions([
-                    'resolve' => [$request->getHeaderLine('Host') => '127.0.0.1']
-                ]);
-            } else {
-                $client = $this->client;
+                $host = $request->getHeaderLine('Host');
+                /// @todo... match also IPV6 addresses (with optional port too!), see https://www.ietf.org/rfc/rfc2732.txt
+                if (!preg_match('/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(?::[0-9]{1,5})?$/', $host)) {
+                    $host = explode(':', $host, 2);
+                    $host = $host[0];
+                    $client = $this->client->withOptions([
+                        'resolve' => [$host => '127.0.0.1']
+                    ]);
+                }
             }
-            return $client->sendRequest($request);
+            $response = $client->sendRequest($request);
+            $this->debug("Upstream returned HTTP/" . $response->getProtocolVersion() . ' ' . $response->getStatusCode() . ' ' .
+                $response->getReasonPhrase());
+            return $response;
         } catch(ClientExceptionInterface $e) {
             return $this->errorResponse($request, $e);
         }
@@ -202,6 +210,7 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
             '/_ping' => [
                 'verbs' => ['GET', 'HEAD'],
             ],
+            /// @todo should we disable this? The version number might be useful to attackers...
             '/version' => [
                 'verbs' => ['GET'],
             ],
