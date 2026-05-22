@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace DPFP\Logger;
+namespace YADSP\Logger;
 
 use Psr\Log\LogLevel;
 
@@ -26,7 +26,7 @@ class ErrorLogger
     {
         if (@static::$map[$level]) {
 /// @todo... add context data
-            $message = 'DPFP ' . ucfirst($level) . ': ' . $message;
+            $message = 'YADSP ' . ucfirst($level) . ': ' . $message;
             error_log($message);
         }
     }

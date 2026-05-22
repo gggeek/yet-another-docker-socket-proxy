@@ -14,8 +14,8 @@
     persist_config off
 
     # on port 80 only listen for http1 - no need for H2C
-	servers :80 {
-	    name dpfp
+	servers :2375 {
+	    name yadsp
 		protocols h1
 	}
 
@@ -38,7 +38,7 @@
 
 {$CADDY_EXTRA_CONFIG}
 
-http:// {
+:2375 {
     root /app/public/
     # q: does the Docker client support http compression? If not, we can disable this
     encode zstd br gzip

@@ -1,9 +1,8 @@
-# Docker Proxy Filter PHP
+# Yet Another Docker Socket Proxy
 
 Yet another security-enhancing proxy for the Docker Socket.
 
-Aka. a small forward proxy for filtering the responses of calls to the Docker API to only what you want to
-expose.
+Aka. a small forward proxy for filtering the responses of calls to the Docker API to only what you want to expose.
 
 It is a "level 7" proxy, in that it is aware of the semantics of the Docker API protocol, and it allows both filtering
 the Requests and rewriting the Responses.
@@ -52,7 +51,7 @@ For now:
    ```shell
    docker run \
        --rm \
-       -p 0.0.0.0:2375:80 \
+       -p 0.0.0.0:2375:2375 \
        -v .:/app:ro \
        -v ./build/docker/Caddyfile:/etc/frankenphp/Caddyfile:ro \
        -v /var/run/docker.sock:/var/run/docker.sock:ro \

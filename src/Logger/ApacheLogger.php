@@ -1,17 +1,17 @@
 <?php
 declare(strict_types=1);
 
-namespace DPFP\Logger;
+namespace YADSP\Logger;
 
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 
 /**
- * Sends log messages to Apache, as notes. Those can be logged by adding `%{DPFPLogMessage}n` the `LogFormat` directive
+ * Sends log messages to Apache, as notes. Those can be logged by adding `%{YADSPLogMessage}n` the `LogFormat` directive
  */
 class ApacheLogger extends AbstractLogger
 {
-    const DefaultNoteName = 'DPFPLogMessage';
+    const DefaultNoteName = 'YADSPLogMessage';
 
     use ConditionalLoggerTrait;
 

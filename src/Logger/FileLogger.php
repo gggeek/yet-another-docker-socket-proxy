@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace DPFP\Logger;
+namespace YADSP\Logger;
 
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;

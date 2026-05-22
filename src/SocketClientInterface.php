@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace DPFP;
+namespace YADSP;
 
 use Psr\Http\Client\ClientInterface;
 
