@@ -1,22 +1,32 @@
 <?php
 declare(strict_types=1);
 
-namespace YADSP;
+namespace YADSP\Filter;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
+use YADSP\FilterInterface;
 use YADSP\Logger\PrivateLoggerTrait;
 
-class Filter implements FilterInterface, LoggerAwareInterface
+/**
+ * The class doing the actual filtering of Requests and Responses
+ */
+class Firewall implements FilterInterface, LoggerAwareInterface
 {
     protected array $config;
 
     use LoggerAwareTrait;
     use PrivateLoggerTrait;
 
+    /**
+     * @param string $configuration
+     * @param LoggerInterface|null $logger
+     * @return static
+     * @throws \Exception
+     */
     public static function fromConfigString(string $configuration, LoggerInterface|null $logger): static
     {
         if (trim($configuration) === '') {
@@ -30,6 +40,12 @@ class Filter implements FilterInterface, LoggerAwareInterface
         return new static($config, $logger);
     }
 
+    /**
+     * @param string $configurationFile
+     * @param LoggerInterface|null $logger
+     * @return static
+     * @throws \Exception
+     */
     public static function fromConfigFile(string $configurationFile, LoggerInterface|null $logger): static
     {
         /// @todo add better error handling as courtesy to the user

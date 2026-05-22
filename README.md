@@ -53,7 +53,7 @@ For now:
        --rm \
        -p 0.0.0.0:2375:2375 \
        -v .:/app:ro \
-       -v ./build/docker/Caddyfile:/etc/frankenphp/Caddyfile:ro \
+       -v ./docker/Caddyfile:/etc/frankenphp/Caddyfile:ro \
        -v /var/run/docker.sock:/var/run/docker.sock:ro \
        -e $CADDY_EXTRA_GLOBAL_OPTIONS=debug \
        dunglas/frankenphp

@@ -3,15 +3,19 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use YADSP\Logger\ErrorLogger;
-use YADSP\Logger\FrankenPHPLogger;
-use YADSP\Proxy;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
+use YADSP\Filter\FilterChain;
+use YADSP\Filter\Firewall;
+use YADSP\Filter\Tracer;
+use YADSP\Logger\ErrorLogger;
+use YADSP\Logger\FileLogger;
+use YADSP\Logger\FrankenPHPLogger;
+use YADSP\Proxy;
 
-if (array_key_exists('YADSP_LOG', $_SERVER) && trim($_SERVER['YADSP_LOG']) !== '') {
-    $logger = new \YADSP\Logger\FileLogger($_SERVER['YADSP_LOG'], $_SERVER['YADSP_LOG'] ?? 'warning');
+if (array_key_exists('YADSP_LOG_FILE', $_SERVER) && trim($_SERVER['YADSP_LOG_FILE']) !== '') {
+    $logger = new FileLogger($_SERVER['YADSP_LOG_FILE'], $_SERVER['YADSP_LOG_FILE'] ?? 'warning');
 } else {
     if (function_exists('frankenphp_log')) {
         $logger = new FrankenPHPLogger();
@@ -31,9 +35,13 @@ if ($configFile !== '') {
     if ($config !== '') {
         throw new \Exception("Can not use at the same time env vars YADSP_CONFIG and YADSP_CONFIG_FILE");
     }
-    $filter = \YADSP\Filter::fromConfigFile($configFile, $logger);
+    $filter = Firewall::fromConfigFile($configFile, $logger);
 } else {
-    $filter = \YADSP\Filter::fromConfigString($config, $logger);
+    $filter = Firewall::fromConfigString($config, $logger);
+}
+
+if (array_key_exists('YADSP_TRACE_FILE', $_SERVER) && trim($_SERVER['YADSP_TRACE_FILE']) !== '') {
+    $filter = new FilterChain([new Tracer($_SERVER['YADSP_TRACE_FILE']), $filter]);
 }
 
 $proxy = new Proxy($filter, $upstream, null, $logger);

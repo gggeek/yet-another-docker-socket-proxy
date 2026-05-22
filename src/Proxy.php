@@ -41,9 +41,6 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
         $this->logger = $logger;
         $this->client = $httpClient;
         $this->filter = $filter;
-        if ($filter instanceof LoggerAwareInterface) {
-            $filter->setLogger($logger);
-        }
         $this->setUpstream($upstream);
     }
 
@@ -132,7 +129,8 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
     protected function deniedResponse(ServerRequestInterface $request): ResponseInterface
     {
         $this->debug("Access denied for request: " . $this->request2Log($request));
-/// @todo... mimic what the Docker daemon returns by default for not-accepted requests
+        // Mimic what the Docker daemon returns by default for not-accepted requests - bt give a specific error text
+        // (docker says "page not found" for 404s)
         return new Response(404, ['content-type' => 'application/json'], json_encode(['message' => 'access denied']));
     }
 
