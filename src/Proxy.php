@@ -86,11 +86,16 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
     {
         $this->debug("Received request: " . $this->request2Log($request));
 
-        if ($request = $this->filter->filterRequest($request)) {
-            $response = $this->forward($request);
-            return $this->filter->filterResponse($response, $request);
+        $filteredRequest = $this->filter->filterRequest($request);
+        if (!$filteredRequest) {
+            // Q: should we pass in $request or $filteredRequest?
+            return $this->deniedResponse($request);
         }
-        return $this->deniedResponse($request);
+        if ($filteredRequest instanceof ResponseInterface) {
+            return $filteredRequest;
+        }
+        $response = $this->forward($filteredRequest);
+        return $this->filter->filterResponse($response, $request);
     }
 
     /**

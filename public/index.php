@@ -40,6 +40,11 @@ if ($configFile !== '') {
     $filter = Firewall::fromConfigString($config, $logger);
 }
 
+# NB: the traces files will contain ALL DATA sent to and received from the Docker daemon.
+# This has serious security implications. Please only enable this when troubleshooting / developing the YADSP itself.
+# NB: the tracer could be injected either in front (before) or in the back of (after) the firewall.
+#     In front, it will log what the Docker client sends/received.
+#     In the back, it will log that ise sent/received to the Docker daemon
 if (array_key_exists('YADSP_TRACE_FILE', $_SERVER) && trim($_SERVER['YADSP_TRACE_FILE']) !== '') {
     $filter = new FilterChain([new Tracer($_SERVER['YADSP_TRACE_FILE']), $filter]);
 }

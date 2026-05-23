@@ -10,16 +10,34 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use YADSP\FilterInterface;
 use YADSP\Logger\PrivateLoggerTrait;
+use YADSP\Matcher\AndMatcher;
+use YADSP\Matcher\OrMatcher;
+use YADSP\Matcher\Request\MatcherFactory;
+use YADSP\MatcherInterface;
 
 /**
  * The class doing the actual filtering of Requests and Responses
  */
 class Firewall implements FilterInterface, LoggerAwareInterface
 {
-    protected array $config;
-
     use LoggerAwareTrait;
     use PrivateLoggerTrait;
+
+    protected static $defaultFallbackConfiguration = [
+        [
+            'url' => '/_ping',
+            'method' => ['GET', 'HEAD'],
+        ],
+        /// @todo should we disable this? The version number might be useful to attackers...
+        [
+            'url' => '/version',
+            'method' => ['GET'],
+        ]
+    ];
+
+    /** @var MatcherInterface[] */
+    protected array $requestMatchers;
+    protected array|null $fallbackConfiguration = null;
 
     /**
      * @param string $configuration
@@ -62,49 +80,94 @@ class Firewall implements FilterInterface, LoggerAwareInterface
         if (!$config) {
             $this->warning("No configuration passed in. The proxy will only let trough 'ping' and 'version' API calls");
         }
-        $this->config = $this->validateConfiguration($config);
+        $this->requestMatchers = $this->parseConfiguration($config);
     }
 
     /**
      * @param array $config
-     * @return array
+     * @return MatcherInterface[]
      * @throws \Exception
      */
-    protected function validateConfiguration(array $config): array
+    protected function parseConfiguration(array $config): array
     {
-        foreach($config as $clientIp => $rules) {
-/// @todo validate more...
-            if (!is_array($rules)) {
-                throw new \Exception("Bad configuration: rules for $clientIp should be an array");
+        foreach($config as $ruleName => $ruleSpec) {
+            if (!is_array($ruleSpec)) {
+                throw new \Exception("Bad configuration: the value for firewall rule '$ruleName' should be an array");
             }
         }
 
         if (isset($config['*'])) {
-/// @todo... check that this is the last filter
-            $config['*'] = $config['*'] + $this->defaultConfiguration();
+            // make sure that this is the last rule
+            $fallbackConfig = $config['*'] + $this->fallbackConfiguration();
+            unset($config['*']);
+            $config['*'] = $fallbackConfig;
+
         } else {
-            $config['*'] = $this->defaultConfiguration();
+            $config['*'] = $this->fallbackConfiguration();
         }
 
-        return $config;
+        $matchers = [];
+        foreach($config as $ruleName => $ruleSpec) {
+            try {
+                $matchers[$ruleName] = $this->parseRuleSpecConfiguration($ruleSpec);
+            } catch (\Exception $e) {
+                throw new \Exception("Error parsing firewall rule '$ruleName': " . $e->getMessage());
+            }
+        }
+        return $matchers;
+    }
+
+    /**
+     * @param array $ruleSpec
+     * @return MatcherInterface
+     * @throws \Exception
+     */
+    protected function parseRuleSpecConfiguration(array $ruleSpec): MatcherInterface
+    {
+        $factory = new MatcherFactory();
+        if (count($ruleSpec) === 1) {
+            $ruleCase = reset($ruleSpec);
+            if (!is_array($ruleCase) || !$ruleCase) {
+                throw new \Exception('The value for each rule must be a non-empty array of cases');
+            }
+            if (count($ruleCase) === 1) {
+                $matcher = $factory->fromConfiguration(array_key_first($ruleCase), reset($ruleCase));
+            } else {
+                $matcher = new AndMatcher([]);
+                foreach ($ruleCase as $type => $value) {
+                    $matcher->addMatcher($factory->fromConfiguration($type, $value));
+                }
+            }
+        } else {
+            $matcher = new OrMatcher([]);
+            /// @todo should we check that there is at least 1 element?
+            foreach ($ruleSpec as $ruleCase) {
+                if (!is_array($ruleCase) || !$ruleCase) {
+                    throw new \Exception('The value for each rule must be a non-empty array of cases');
+                }
+                if (count($ruleCase) === 1) {
+                    $matcher = $factory->fromConfiguration(array_key_first($ruleCase), reset($ruleCase));
+                } else {
+                    $matcher = new AndMatcher([]);
+                    foreach ($ruleCase as $type => $value) {
+                        $matcher->addMatcher($factory->fromConfiguration($type, $value));
+                    }
+                }
+            }
+        }
+        return $matcher;
     }
 
     public function filterRequest(ServerRequestInterface $request): ServerRequestInterface|false
     {
-        foreach($this->config as $matchFilter => $rules) {
-            if ($this->matchesRequest($matchFilter, $rules, $request)) {
-                $this->debug("Filter '$matchFilter' matched request: " . $this->request2Log($request));
+        foreach($this->requestMatchers as $ruleName => $matcher) {
+            if ($matcher->matches($request)) {
+                $this->debug("Firewall rule '$ruleName' matched request: " . $this->request2Log($request));
                 return $request;
             }
         }
-        $this->debug("No filter matched request: " . $this->request2Log($request));
+        $this->debug("No firewall rule matched request: " . $this->request2Log($request));
         return false;
-    }
-
-    protected function matchesRequest(string $matchFilter, array $rules, ServerRequestInterface $request): bool
-    {
-/// @todo...
-        return true;
     }
 
     public function filterResponse(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface
@@ -118,17 +181,15 @@ class Firewall implements FilterInterface, LoggerAwareInterface
      * @return array
      * @todo allow access to /events?
      */
-    protected function defaultConfiguration(): array
+    protected function fallbackConfiguration(): array
     {
-        return [
-            '/_ping' => [
-                'verbs' => ['GET', 'HEAD'],
-            ],
-            /// @todo should we disable this? The version number might be useful to attackers...
-            '/version' => [
-                'verbs' => ['GET'],
-            ],
-        ];
+        return is_array($this->fallbackConfiguration) ? $this->fallbackConfiguration : static::$defaultFallbackConfiguration;
+    }
+
+    public function setFallbackConfiguration(array $config): void
+    {
+        /// @todo validate the config
+        $this->fallbackConfiguration = $config;
     }
 
     // *** Logging ***

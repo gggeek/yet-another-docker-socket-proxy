@@ -6,6 +6,12 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use YADSP\FilterInterface;
 
+/**
+ * NB: despite the output format being basically the same as what you from CURL, and despite the name, there is
+ * no guarantee that this will print the actual http request/response, as that is left to the Client.
+ *
+ * @todo investigate if we can somehow fix that
+ */
 class Tracer implements FilterInterface
 {
     protected $fileName;
