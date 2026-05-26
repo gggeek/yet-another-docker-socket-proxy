@@ -71,15 +71,15 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
             $this->debug("Proxying '$upstream' socket upstream");
             return;
         }
-        if (str_starts_with($upstream, 'http://') || str_starts_with($upstream, 'https://')) {
+        if (str_starts_with($upstream, 'tcp://')) {
             $this->upstream = $upstream;
             if (!$this->client) {
                 $this->client = new Psr18Client(HttpClient::create());
             }
-            $this->debug("Proxying '$upstream' http upstream");
+            $this->debug("Proxying '$upstream' tcp upstream");
             return;
         }
-        throw new \Exception('Upstream not supported. Only sockets (paths starting with "/") and http endpoints (urls starting with "http://" or "https://") are');
+        throw new \Exception('Upstream not supported. Only unix sockets (paths starting with "/") and tcp sockets (urls starting with "tcp://") are');
     }
 
     public function handle(ServerRequestInterface $request): ResponseInterface
@@ -106,7 +106,8 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
     {
         try {
             $client = $this->client;
-            // avoid dns resolution, in case the request we get uses a hostname
+            // avoid dns resolution, in case the http request we get uses a hostname
+/// @todo... we are only doing this for unix-socket upstreams, but we should probably do this as well for tcp ones
             if (str_starts_with($this->upstream, '/') && method_exists($this->client, 'withOptions')) {
                 $host = $request->getHeaderLine('Host');
                 /// @todo... match also IPV6 addresses (with optional port too!), see https://www.ietf.org/rfc/rfc2732.txt
@@ -146,7 +147,7 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
     protected function errorResponse(ServerRequestInterface $request, \Exception|null $e = null): ResponseInterface
     {
         $this->warning('Upstream connection error for request: '  . $this->request2Log($request) . ' Error:' . $e->getMessage());
-/// @todo... mimic what the Docker daemon returns by default for failed requests
+/// @todo... make sure we mimic correctly what the Docker daemon returns by default for failed requests (how can we trigger one?)
         return new Response(500, ['content-type' => 'application/json'], json_encode(['message' => 'error ' . $e->getCode()]));
     }
 
