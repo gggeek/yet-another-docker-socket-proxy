@@ -37,7 +37,7 @@ class ApacheLogger extends AbstractLogger
 
     protected function formatMessage($level, string|\Stringable $message, array $context = []): string
     {
-/// @todo... add context
+/// @todo... add context data
         return ucfirst($level) . ": $message";
     }
 }

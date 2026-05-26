@@ -52,7 +52,7 @@ trait ConditionalLoggerTrait
             if (ctype_digit($level)) {
                 return (int)$level;
             } else {
-                // always log unknown levels
+/// @todo emit a warning if receiving an unknown log level - using trigger_error ?
                 return self::RFC_5424_LEVELS[$level] ?? 0;
             }
         }

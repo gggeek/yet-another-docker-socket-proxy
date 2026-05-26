@@ -13,6 +13,8 @@ class FileLogger extends AbstractLogger
 {
     //protected $format;
     protected string $fileName;
+    // Timestamp format used is the same as used by Nginx by default, eg `[03/Jun/2025:14:28:21 +0000]`. PHP-FPM by default goes for `[19-Feb-2026 18:09:50]`
+    protected string $timestampFormat = 'd/M/Y:H:i:s O';
 
     use ConditionalLoggerTrait;
 
@@ -32,7 +34,7 @@ class FileLogger extends AbstractLogger
 
     protected function formatMessage($level, string|\Stringable $message, array $context = []): string
     {
-/// @todo... format timestamp, add context data
-        return '[' . microtime(true) . '] ' . ucfirst($level) . ": $message";
+/// @todo... add context data
+        return '[' . (new \DateTime())->format($this->timestampFormat) . '] ' . ucfirst($level) . ": $message";
     }
 }
