@@ -15,7 +15,7 @@ use YADSP\Logger\FrankenPHPLogger;
 use YADSP\Proxy;
 
 if (array_key_exists('YADSP_LOG_FILE', $_SERVER) && trim($_SERVER['YADSP_LOG_FILE']) !== '') {
-    $logger = new FileLogger($_SERVER['YADSP_LOG_FILE'], $_SERVER['YADSP_LOG_FILE'] ?? 'warning');
+    $logger = new FileLogger($_SERVER['YADSP_LOG_FILE'], $_SERVER['YADSP_LOG_LEVEL'] ?? 'warning');
 } else {
     if (function_exists('frankenphp_log')) {
         $logger = new FrankenPHPLogger();
