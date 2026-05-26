@@ -11,7 +11,7 @@ class UserAgentMatcher extends BaseMatcher
     use RegExpListMatcherTrait;
 
     /**
-     * @param string|array $filter
+     * @param string|string[] $filter
      * @throws \Exception
      */
     public function __construct(string|array $filter)

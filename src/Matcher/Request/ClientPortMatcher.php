@@ -12,11 +12,15 @@ class ClientPortMatcher extends BaseMatcher
     use RegExpListMatcherTrait;
 
     /**
-     * @param string|array $filter
+     * @param string|int|string[]|int[] $filter
      * @throws \Exception
      */
-    public function __construct(string|array $filter)
+    public function __construct(string|int| array $filter)
     {
+        if (is_int($filter)) {
+            $filter = (string)$filter;
+        }
+/// @todo... cast ints to strings when an array is received
         $this->setAllowedValues($filter);
     }
 

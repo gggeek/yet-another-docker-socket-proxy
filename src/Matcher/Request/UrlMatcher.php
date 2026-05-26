@@ -29,6 +29,9 @@ class UrlMatcher extends BaseMatcher
         return $this->matchesString($request->getRequestTarget());
     }
 
+    /// @todo add wildcard support...
+    /// @todo add '/vXX/' prefix support...
+    /// @todo add support for query strings and anchors
     protected function normalizeValue(string $value): string
     {
         return '^' . preg_quote($value, $this->regexpDelimiter) . '$';
