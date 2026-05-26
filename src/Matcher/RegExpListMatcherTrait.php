@@ -10,7 +10,8 @@ trait RegExpListMatcherTrait
 {
     /** @var string[] $allowedValues */
     protected array $allowedValues;
-    protected $regexpDelimiter = '#';
+    protected string $regexpDelimiter = '#';
+    protected string $regexp;
 
     /**
      * @param string|string[] $values
@@ -32,6 +33,12 @@ trait RegExpListMatcherTrait
         } else {
             $this->allowedValues = [$this->normalizeValue($values)];
         }
+        $this->regexp = $this->regexpDelimiter . '(' . implode('|', $this->allowedValues) . ')' . $this->regexpDelimiter;
+    }
+
+    protected function matchesString(string $value): bool
+    {
+        return (bool)preg_match($this->regexp, $value);
     }
 
     /**
@@ -44,9 +51,8 @@ trait RegExpListMatcherTrait
         return preg_quote($value, $this->regexpDelimiter);
     }
 
-    protected function matchesString(string $value): bool
+    protected function wildcardToRegexp(string $value): string
     {
-        /// @todo build the final regexp only once, in setAllowedValues
-        return (bool)preg_match($this->regexpDelimiter . '(' . implode('|', $this->allowedValues) . ')' . $this->regexpDelimiter, $value);
+        return '^' . str_replace(['*'], ['.*'], preg_quote($value, $this->regexpDelimiter)) . '$';
     }
 }

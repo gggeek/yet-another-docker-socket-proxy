@@ -6,7 +6,7 @@ namespace YADSP\Matcher\Request;
 use Psr\Http\Message\ServerRequestInterface;
 use YADSP\Matcher\RegExpListMatcherTrait;
 
-class ClientAddressMatcher extends BaseMatcher
+class UserAgentMatcher extends BaseMatcher
 {
     use RegExpListMatcherTrait;
 
@@ -23,9 +23,9 @@ class ClientAddressMatcher extends BaseMatcher
     {
         $env = $request->getServerParams();
         /// @todo... log a warning if we are not passed this env var
-        $clientAddress = $env['REMOTE_ADDR'] ?? '';
+        $ua = $env['HTTP_USER_AGENT'] ?? '';
 
-        return $this->matchesString($clientAddress);
+        return $this->matchesString($ua);
     }
 
     protected function normalizeValue(string $value): string

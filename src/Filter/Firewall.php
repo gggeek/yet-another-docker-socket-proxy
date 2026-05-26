@@ -63,11 +63,15 @@ class Firewall implements FilterInterface, LoggerAwareInterface
      * @param LoggerInterface|null $logger
      * @return static
      * @throws \Exception
+     * @todo allow parsing yaml files besides json ones
      */
     public static function fromConfigFile(string $configurationFile, LoggerInterface|null $logger): static
     {
-        /// @todo add better error handling as courtesy to the user
-        return static::fromConfigString(file_get_contents($configurationFile), $logger);
+        $logger?->debug("Loading firewall configuration from file '$configurationFile'");
+        if (($configString = @file_get_contents($configurationFile)) === false) {
+            throw new \Exception("Can not load configuration file '$configurationFile' " . error_get_last()['message']);
+        }
+        return static::fromConfigString($configString, $logger);
     }
 
     /**
@@ -78,7 +82,7 @@ class Firewall implements FilterInterface, LoggerAwareInterface
     {
         $this->logger = $logger;
         if (!$config) {
-            $this->warning("No configuration passed in. The proxy will only let trough 'ping' and 'version' API calls");
+            $this->warning("Empty configuration passed in. The proxy will only let trough 'ping' and 'version' API calls");
         }
         $this->requestMatchers = $this->parseConfiguration($config);
     }
