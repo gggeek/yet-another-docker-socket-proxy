@@ -26,12 +26,12 @@ class Firewall implements FilterInterface, LoggerAwareInterface
     protected static $defaultFallbackConfiguration = [
         [
             'url' => '/_ping',
-            'method' => ['GET', 'HEAD'],
+            'http_method' => ['GET', 'HEAD'],
         ],
         /// @todo should we disable this? The version number might be useful to attackers...
         [
             'url' => '/version',
-            'method' => ['GET'],
+            'http_method' => ['GET'],
         ]
     ];
 

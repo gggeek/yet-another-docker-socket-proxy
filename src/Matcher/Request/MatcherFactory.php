@@ -22,7 +22,7 @@ class MatcherFactory
                 return new ClientAddressMatcher($values);
             case 'client_port':
                 return new ClientPortMatcher($values);
-            case 'method':
+            case 'http_method':
                 return new MethodMatcher($values);
             case 'url':
                 return new UrlMatcher($values);
