@@ -10,9 +10,12 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use YADSP\FilterInterface;
 use YADSP\Logger\PrivateLoggerTrait;
-use YADSP\Matcher\AndMatcher;
-use YADSP\Matcher\OrMatcher;
-use YADSP\Matcher\Request\MatcherFactory;
+use YADSP\Matcher\ChainFactory;
+use YADSP\Matcher\Logic\AndMatcher;
+use YADSP\Matcher\Logic\OrMatcher;
+use YADSP\Matcher\Logic\MatcherFactory as LogicMatcherFactory;
+use YADSP\Matcher\Request\MatcherFactory as RequestMatcherFactory;
+use YADSP\MatcherFactoryInterface;
 use YADSP\MatcherInterface;
 
 /**
@@ -35,6 +38,7 @@ class Firewall implements FilterInterface, LoggerAwareInterface
         ]
     ];
 
+    protected MatcherFactoryInterface $matcherFactory;
     /** @var MatcherInterface[] */
     protected array $requestMatchers;
     protected array|null $fallbackConfiguration = null;
@@ -94,15 +98,18 @@ class Firewall implements FilterInterface, LoggerAwareInterface
      */
     protected function parseConfiguration(array $config): array
     {
+        $this->matcherFactory = $this->setupMatcherFactory($config);
+
         foreach($config as $ruleName => $ruleSpec) {
             if (!is_array($ruleSpec)) {
                 throw new \Exception("Bad configuration: the value for firewall rule '$ruleName' should be an array");
             }
         }
 
-        if (isset($config['*'])) {
-            // make sure that this is the last rule
+        if (array_key_exists('*', $config)) {
+            // add the fallback rules
             $fallbackConfig = $config['*'] + $this->fallbackConfiguration();
+            // make sure that this is the last rule
             unset($config['*']);
             $config['*'] = $fallbackConfig;
 
@@ -122,24 +129,33 @@ class Firewall implements FilterInterface, LoggerAwareInterface
     }
 
     /**
+     * @param array $config
+     * @return MatcherFactoryInterface
+     * @throws \Exception
+     */
+    protected function setupMatcherFactory(array $config): MatcherFactoryInterface
+    {
+        return new ChainFactory([new RequestMatcherFactory(), new LogicMatcherFactory()]);
+    }
+
+    /**
      * @param array $ruleSpec
      * @return MatcherInterface
      * @throws \Exception
      */
     protected function parseRuleSpecConfiguration(array $ruleSpec): MatcherInterface
     {
-        $factory = new MatcherFactory();
         if (count($ruleSpec) === 1) {
             $ruleCase = reset($ruleSpec);
             if (!is_array($ruleCase) || !$ruleCase) {
                 throw new \Exception('The value for each rule must be a non-empty array of cases');
             }
             if (count($ruleCase) === 1) {
-                $matcher = $factory->fromConfiguration(array_key_first($ruleCase), reset($ruleCase));
+                $matcher = $this->matcherFactory->fromConfiguration(array_key_first($ruleCase), reset($ruleCase));
             } else {
                 $matcher = new AndMatcher([]);
                 foreach ($ruleCase as $type => $value) {
-                    $matcher->addMatcher($factory->fromConfiguration($type, $value));
+                    $matcher->addMatcher($this->matcherFactory->fromConfiguration($type, $value));
                 }
             }
         } else {
@@ -150,11 +166,11 @@ class Firewall implements FilterInterface, LoggerAwareInterface
                     throw new \Exception('The value for each rule must be a non-empty array of cases');
                 }
                 if (count($ruleCase) === 1) {
-                    $matcher = $factory->fromConfiguration(array_key_first($ruleCase), reset($ruleCase));
+                    $matcher = $this->matcherFactory->fromConfiguration(array_key_first($ruleCase), reset($ruleCase));
                 } else {
                     $matcher = new AndMatcher([]);
                     foreach ($ruleCase as $type => $value) {
-                        $matcher->addMatcher($factory->fromConfiguration($type, $value));
+                        $matcher->addMatcher($this->matcherFactory->fromConfiguration($type, $value));
                     }
                 }
             }
