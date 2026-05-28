@@ -1,6 +1,7 @@
 - Proxy
   - matching requests/responses
     - finish setting up and/or/not machers
+    - todos in Rule class
 	- urls: accommodate the /vXXX/ prefix transparently
 	- urls: accommodate ``?aaa` and ``#bbb` transparently by default
 	  Test the limits of what docker server answers on its own
