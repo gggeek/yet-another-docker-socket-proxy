@@ -1,14 +1,14 @@
 <?php
+declare(strict_types=1);
 
-namespace YADSP\Filter;
+namespace YADSP\Filter\Bidirectional;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use YADSP\FilterInterface;
 
-class FilterChain implements FilterInterface
+class FilterChain implements BidirectionalFilterInterface
 {
-    /** @var FilterInterface[] */
+    /** @var BidirectionalFilterInterface[] */
     protected array $filters = [];
     /** @var ServerRequestInterface */
     protected array $requestChain = [];
@@ -20,7 +20,7 @@ class FilterChain implements FilterInterface
         }
     }
 
-    public function addFilter(FilterInterface $filter)
+    public function addFilter(BidirectionalFilterInterface $filter)
     {
         $this->filters[] = $filter;
     }
@@ -39,10 +39,14 @@ class FilterChain implements FilterInterface
         return $request;
     }
 
-    public function filterResponse(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface
+    public function filterResponse(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface|false
     {
-        for($i = count($this->filters) - 1; $i >= 0; $i--) {
+        for ($i = count($this->filters) - 1; $i >= 0; $i--) {
             $response = $this->filters[$i]->filterResponse($response, $this->requestChain[$i]);
+            if ($response === false) {
+                $this->requestChain = [];
+                return false;
+            }
         }
         $this->requestChain = [];
         return $response;

@@ -3,15 +3,21 @@ declare(strict_types=1);
 
 namespace YADSP\Matcher\Request;
 
-use YADSP\MatcherInterface;
+use YADSP\Matcher\MatcherFactoryInterface;
+use YADSP\Matcher\MatcherInterface;
 
 /// @todo make this logger-aware, and pass the logger on to the created matchers if they also are
-class MatcherFactory
+class MatcherFactory implements MatcherFactoryInterface
 {
+    public function supports(string $type): bool
+    {
+        return in_array($type, ['client_address', 'client_port', 'http_method', 'url', 'user_agent']);
+    }
+
     /**
      * @param string $type
      * @param mixed $values
-     * @return MatcherInterface
+     * @return \YADSP\Matcher\MatcherInterface
      * @throws \Exception
      */
     public function fromConfiguration(string $type, mixed $values): MatcherInterface

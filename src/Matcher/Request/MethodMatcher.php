@@ -4,9 +4,7 @@ declare(strict_types=1);
 namespace YADSP\Matcher\Request;
 
 use Psr\Http\Message\ServerRequestInterface;
-use YADSP\Matcher\RegExpListMatcherTrait;
 use YADSP\Matcher\StringListMatcherTrait;
-use YADSP\MatcherInterface;
 
 class MethodMatcher extends BaseMatcher
 {

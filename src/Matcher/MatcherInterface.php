@@ -1,8 +1,7 @@
 <?php
+declare(strict_types=1);
 
-namespace YADSP;
-
-use Psr\Http\Message\ServerRequestInterface;
+namespace YADSP\Matcher;
 
 interface MatcherInterface
 {

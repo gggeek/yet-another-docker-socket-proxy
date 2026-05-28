@@ -1,10 +1,10 @@
 <?php
+declare(strict_types=1);
 
-namespace YADSP\Filter;
+namespace YADSP\Filter\Bidirectional;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use YADSP\FilterInterface;
 
 /**
  * NB: despite the output format being basically the same as what you from CURL, and despite the name, there is
@@ -12,7 +12,7 @@ use YADSP\FilterInterface;
  *
  * @todo investigate if we can somehow fix that
  */
-class Tracer implements FilterInterface
+class Tracer implements BidirectionalFilterInterface
 {
     protected $fileName;
 
@@ -29,7 +29,7 @@ class Tracer implements FilterInterface
         return $request;
     }
 
-    public function filterResponse(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface
+    public function filterResponse(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface|false
     {
         file_put_contents($this->fileName, $this->serializeResponse($response) . "--\n", FILE_APPEND);
         return $response;

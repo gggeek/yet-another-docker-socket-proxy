@@ -5,7 +5,6 @@ namespace YADSP\Matcher\Request;
 
 use Psr\Http\Message\ServerRequestInterface;
 use YADSP\Matcher\RegExpListMatcherTrait;
-use YADSP\MatcherInterface;
 
 class UrlMatcher extends BaseMatcher
 {

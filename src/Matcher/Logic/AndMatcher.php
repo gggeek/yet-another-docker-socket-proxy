@@ -1,11 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace YADSP\Matcher;
+namespace YADSP\Matcher\Logic;
 
-use YADSP\MatcherInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use YADSP\Matcher\MatcherInterface;
+use YADSP\Matcher\Request\RequestMatcherInterface;
+use YADSP\Matcher\Response\ResponseMatcherInterface;
 
-class AndMatcher implements MatcherInterface
+class AndMatcher implements RequestMatcherInterface, ResponseMatcherInterface
 {
     /** @var MatcherInterface[] */
     protected array $matchers = [];
@@ -25,6 +29,11 @@ class AndMatcher implements MatcherInterface
         $this->matchers[] = $matcher;
     }
 
+    /**
+     * @param ...$items
+     * @return bool
+     * @throws \Exception
+     */
     public function matches(...$items): bool
     {
         if (!$this->matchers) {
@@ -37,5 +46,25 @@ class AndMatcher implements MatcherInterface
             }
         }
         return true;
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return bool
+     * @throws \Exception
+     */
+    public function matchesRequest(ServerRequestInterface $request): bool
+    {
+        return $this->matches($request);
+    }
+
+    /**
+     * @param ResponseInterface $response
+     * @return bool
+     * @throws \Exception
+     */
+    public function matchesResponse(ResponseInterface $response): bool
+    {
+        return $this->matches($response);
     }
 }

@@ -12,30 +12,30 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpClient\Psr18Client;
+use YADSP\Filter\Bidirectional\BidirectionalFilterInterface;
 use YADSP\Logger\PrivateLoggerTrait;
 
 class Proxy implements RequestHandlerInterface, LoggerAwareInterface
 {
     const DEFAULT_UPSTREAM = '/var/run/docker.sock';
 
-    protected string $upstream;
-    protected ?ClientInterface $client;
-    protected FilterInterface $filter;
-
     use LoggerAwareTrait;
     use PrivateLoggerTrait;
 
+    protected string $upstream;
+    protected ?ClientInterface $client;
+    protected BidirectionalFilterInterface $filter;
+
     /**
-     * @param FilterInterface $filter
+     * @param BidirectionalFilterInterface $filter
      * @param string $upstream
      * @param ClientInterface|SocketClientInterface|null $httpClient
      * @param LoggerInterface|null $logger
      * @throws \Exception
      */
-    public function __construct(FilterInterface $filter, string $upstream = self::DEFAULT_UPSTREAM, ClientInterface|SocketClientInterface|null $httpClient = null, LoggerInterface|null $logger = null)
+    public function __construct(BidirectionalFilterInterface $filter, string $upstream = self::DEFAULT_UPSTREAM, ClientInterface|SocketClientInterface|null $httpClient = null, LoggerInterface|null $logger = null)
     {
         // set first the logger
         $this->logger = $logger;

@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace YADSP\Matcher;
+namespace YADSP\Matcher\Logic;
 
-use Psr\Http\Message\ServerRequestInterface;
-use YADSP\MatcherInterface;
+use YADSP\Matcher\Request\RequestMatcherInterface;
+use YADSP\Matcher\Response\ResponseMatcherInterface;
 
-class NegativeMatcher implements MatcherInterface
+class NegativeMatcher implements RequestMatcherInterface, ResponseMatcherInterface
 {
     protected MatcherInterface $matcher;
 
@@ -15,8 +15,8 @@ class NegativeMatcher implements MatcherInterface
         $this->matcher = $matcher;
     }
 
-    public function matches(ServerRequestInterface $request): bool
+    public function matches(...$items): bool
     {
-        return !$this->matcher->matches($request);
+        return !$this->matcher->matches(...$items);
     }
 }
