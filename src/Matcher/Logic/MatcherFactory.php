@@ -3,11 +3,14 @@ declare(strict_types=1);
 
 namespace YADSP\Matcher\Logic;
 
+use YADSP\Matcher\MatcherFactoryAwareTrait;
 use YADSP\Matcher\MatcherFactoryInterface;
 use YADSP\Matcher\MatcherInterface;
 
 class MatcherFactory implements MatcherFactoryInterface
 {
+    use MatcherFactoryAwareTrait;
+
     public function supports(string $type): bool
     {
         return in_array($type, ['always', 'and', 'never', 'not', 'or']);
@@ -27,17 +30,23 @@ class MatcherFactory implements MatcherFactoryInterface
                 /// @todo log a warning if $values is falsey
                 return new AlwaysMatcher();
             case 'and':
-/// @todo... we need to transform $values into $matchers
-                return new AndMatcher($values);
+            case 'or':
+                if (!is_array($values) || count($values) <= 1) {
+                    throw new \Exception("Invalid logical matching configuration: '$type' should have as value an array with at least 2 elements");
+                }
+                $matchers = [];
+                foreach ($values as $type => $subValues) {
+                    $matchers[] = $this->matcherFactory->fromConfiguration($type, $subValues);
+                }
+                return $target === 'and' ? new AndMatcher($matchers) : new OrMatcher($matchers);
             case 'never':
                 /// @todo log a warning if $values is falsey
                 return new NeverMatcher();
             case 'not':
-/// @todo... we need to transform $values into $matchers
-                return new NegativeMatcher($values);
-            case 'or':
-/// @todo... we need to transform $values into $matchers
-                return new OrMatcher($values);
+                if (!is_array($values) || count($values) !== 1) {
+                    throw new \Exception("Invalid logical matching configuration: '$type' should have as value an array with a single element");
+                }
+                return new NegativeMatcher($this->matcherFactory->fromConfiguration(array_key_first($values), reset($values)));
         }
         throw new \Exception("Invalid logical matching configuration: '$type' => " . var_export($values, true));
     }

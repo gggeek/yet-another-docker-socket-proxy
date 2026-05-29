@@ -8,7 +8,6 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use YADSP\Filter\Bidirectional\FilterChain;
 use YADSP\Filter\Bidirectional\Tracer;
-use YADSP\Firewall\Firewall;
 use YADSP\Logger\ErrorLogger;
 use YADSP\Logger\FileLogger;
 use YADSP\Logger\FrankenPHPLogger;
@@ -29,15 +28,16 @@ if (array_key_exists('DOCKER_HOST', $_SERVER) && trim($_SERVER['DOCKER_HOST']) !
     $upstream = $_SERVER['DOCKER_HOST'];
 }
 
+$firewallFactory = new \YADSP\Firewall\FirewallFactory($logger);
 $config = array_key_exists('YADSP_CONFIG', $_SERVER) ? trim($_SERVER['YADSP_CONFIG']) : '';
 $configFile = array_key_exists('YADSP_CONFIG_FILE', $_SERVER) ? trim($_SERVER['YADSP_CONFIG_FILE']) : '';
 if ($configFile !== '') {
     if ($config !== '') {
         throw new \Exception("Can not use at the same time env vars YADSP_CONFIG and YADSP_CONFIG_FILE");
     }
-    $filter = Firewall::fromConfigFile($configFile, $logger);
+    $filter = $firewallFactory->fromConfigFile($configFile);
 } else {
-    $filter = Firewall::fromConfigString($config, $logger);
+    $filter = $firewallFactory->fromConfigString($config);
 }
 
 # NB: the traces files will contain ALL DATA sent to and received from the Docker daemon.
