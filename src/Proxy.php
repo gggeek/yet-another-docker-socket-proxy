@@ -68,7 +68,7 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
                 }
                 $this->client->bindTo($upstream);
             }
-            $this->debug("Proxying '$upstream' socket upstream");
+            $this->info("Proxying '$upstream' socket upstream");
             return;
         }
         if (str_starts_with($upstream, 'tcp://')) {
@@ -76,7 +76,7 @@ class Proxy implements RequestHandlerInterface, LoggerAwareInterface
             if (!$this->client) {
                 $this->client = new Psr18Client(HttpClient::create());
             }
-            $this->debug("Proxying '$upstream' tcp upstream");
+            $this->info("Proxying '$upstream' tcp upstream");
             return;
         }
         throw new \Exception('Upstream not supported. Only unix sockets (paths starting with "/") and tcp sockets (urls starting with "tcp://") are');
