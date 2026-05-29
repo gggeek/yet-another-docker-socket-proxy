@@ -3,12 +3,21 @@ declare(strict_types=1);
 
 namespace YADSP\Matcher\Request;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use YADSP\Matcher\MatcherFactoryInterface;
 use YADSP\Matcher\MatcherInterface;
 
-/// @todo make this logger-aware, and pass the logger on to the created matchers if they also are
 class MatcherFactory implements MatcherFactoryInterface
 {
+    use LoggerAwareTrait;
+
+    public function __construct(LoggerInterface|null $logger = null)
+    {
+        $this->logger = $logger;
+    }
+
     public function supports(string $type): bool
     {
         return in_array($type, ['client_address', 'client_port', 'http_method', 'url', 'user_agent']);
@@ -25,16 +34,25 @@ class MatcherFactory implements MatcherFactoryInterface
         $target = strtolower(trim($type));
         switch($target) {
             case 'client_address':
-                return new ClientAddressMatcher($values);
+                $matcher = new ClientAddressMatcher($values);
+                break;
             case 'client_port':
-                return new ClientPortMatcher($values);
+                $matcher = new ClientPortMatcher($values);
+                break;
             case 'http_method':
-                return new MethodMatcher($values);
+                $matcher = new MethodMatcher($values);
+                break;
             case 'url':
-                return new UrlMatcher($values);
+                $matcher = new UrlMatcher($values);
+                break;
             case 'user_agent':
                 return new UserAgentMatcher($values);
+            default:
+                throw new \Exception("Invalid request matching configuration: '$type' => " . var_export($values, true));
         }
-        throw new \Exception("Invalid request matching configuration: '$type' => " . var_export($values, true));
+        if ($this->logger && $matcher instanceof LoggerAwareInterface) {
+            $matcher->setLogger($this->logger);
+        }
+        return $matcher;
     }
 }

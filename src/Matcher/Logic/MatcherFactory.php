@@ -3,13 +3,21 @@ declare(strict_types=1);
 
 namespace YADSP\Matcher\Logic;
 
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use YADSP\Matcher\MatcherFactoryAwareTrait;
 use YADSP\Matcher\MatcherFactoryInterface;
 use YADSP\Matcher\MatcherInterface;
 
 class MatcherFactory implements MatcherFactoryInterface
 {
+    use LoggerAwareTrait;
     use MatcherFactoryAwareTrait;
+
+    public function __construct(LoggerInterface|null $logger = null)
+    {
+        $this->logger = $logger;
+    }
 
     public function supports(string $type): bool
     {
@@ -27,7 +35,7 @@ class MatcherFactory implements MatcherFactoryInterface
         $target = strtolower(trim($type));
         switch($target) {
             case 'always':
-                /// @todo log a warning if $values is falsey
+/// @todo log a warning if $values is falsey
                 return new AlwaysMatcher();
             case 'and':
             case 'or':
@@ -40,7 +48,7 @@ class MatcherFactory implements MatcherFactoryInterface
                 }
                 return $target === 'and' ? new AndMatcher($matchers) : new OrMatcher($matchers);
             case 'never':
-                /// @todo log a warning if $values is falsey
+/// @todo log a warning if $values is falsey
                 return new NeverMatcher();
             case 'not':
                 if (!is_array($values) || count($values) !== 1) {

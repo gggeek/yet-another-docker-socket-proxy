@@ -13,7 +13,7 @@ class FirewallFactory
 
     protected array|null $fallbackConfiguration = null;
 
-    public function __construct(LoggerInterface|null $logger)
+    public function __construct(LoggerInterface|null $logger = null)
     {
         $this->logger = $logger;
     }
@@ -26,7 +26,7 @@ class FirewallFactory
      */
     public function fromConfigFile(string $configurationFile): Firewall
     {
-        $this->debug("Loading firewall configuration from file '$configurationFile'");
+        $this->info("Loading firewall configuration from file '$configurationFile'");
         if (($configString = @file_get_contents($configurationFile)) === false) {
             throw new \Exception("Can not load configuration file '$configurationFile' " . error_get_last()['message']);
         }

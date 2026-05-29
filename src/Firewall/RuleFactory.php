@@ -20,7 +20,7 @@ class RuleFactory
 
     protected MatcherFactoryInterface|null $matcherFactory = null;
 
-    public function __construct(LoggerInterface|null $logger)
+    public function __construct(LoggerInterface|null $logger = null)
     {
         $this->logger = $logger;
     }
@@ -114,8 +114,8 @@ class RuleFactory
     protected function getMatcherFactory(array $config): MatcherFactoryInterface
     {
         if ($this->matcherFactory === null) {
-            $logicMatcherFactory = new LogicMatcherFactory();
-            $this->matcherFactory = new ChainFactory([new RequestMatcherFactory(), $logicMatcherFactory]);
+            $logicMatcherFactory = new LogicMatcherFactory($this->logger);
+            $this->matcherFactory = new ChainFactory([new RequestMatcherFactory($this->logger), $logicMatcherFactory]);
             // inception! ;-)
             $logicMatcherFactory->setMatcherFactory($this->matcherFactory);
         }

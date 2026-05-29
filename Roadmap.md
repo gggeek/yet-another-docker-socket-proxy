@@ -1,6 +1,6 @@
 - Proxy
   - matching requests/responses
-    - finish setting up and/or/not machers
+    - test using and/or/not machers
     - todos in Rule class
 	- urls: accommodate the /vXXX/ prefix transparently
 	- urls: accommodate ``?aaa` and ``#bbb` transparently by default
@@ -26,7 +26,6 @@
   - create a flow diagram with req/resp matching and filtering
   - test: support for `tcp:/` sockets
   - look at all cases mentioned at https://hackviser.com/tactics/pentesting/services/docker
-  - allow injecting the logger to matchers
   - tls support
 
 - add config examples and/or a config generator for common usecases, eg. 'all readonly', 'redact secrets', etc...

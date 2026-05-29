@@ -3,11 +3,21 @@ declare(strict_types=1);
 
 namespace YADSP\Matcher\Response;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 use YADSP\Matcher\MatcherFactoryInterface;
 use YADSP\Matcher\MatcherInterface;
 
 class MatcherFactory implements MatcherFactoryInterface
 {
+    use LoggerAwareTrait;
+
+    public function __construct(LoggerInterface|null $logger = null)
+    {
+        $this->logger = $logger;
+    }
+
     public function supports(string $type): bool
     {
         return in_array($type, ['body']);
@@ -24,8 +34,14 @@ class MatcherFactory implements MatcherFactoryInterface
         $target = strtolower(trim($type));
         switch($target) {
             case 'body':
-                return new BodyMatcher($values);
+                $matcher = new BodyMatcher($values);
+                break;
+            default:
+                throw new \Exception("Invalid response matching configuration: '$type' => " . var_export($values, true));
         }
-        throw new \Exception("Invalid response matching configuration: '$type' => " . var_export($values, true));
+        if ($this->logger && $matcher instanceof LoggerAwareInterface) {
+            $matcher->setLogger($this->logger);
+        }
+        return $matcher;
     }
 }
