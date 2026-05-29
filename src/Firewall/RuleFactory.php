@@ -2,6 +2,7 @@
 
 namespace YADSP\Firewall;
 
+use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use YADSP\Logger\PrivateLoggerTrait;
@@ -46,6 +47,15 @@ class RuleFactory
 
 /// @todo... validate types? (either here or in the constructor)
 
+        $config = $config + [
+            'req_match' => ['always' => true],
+            'req_action' => Rule::ACTION_ALLOW,
+            'req_filters' => [],
+            'resp_match' => ['always' => true],
+            'resp_action' => Rule::ACTION_ALLOW,
+            'resp_filters' => []
+        ];
+
 /// @todo... only allow configs with no req_match to be accepted if
 ///          1. req_action is not deny and
 ///          2. either there are req_filters or resp_filters or resp_match+resp_action=deny
@@ -53,18 +63,9 @@ class RuleFactory
 /// @todo... throw if there are req_filters, resp_match, resp_action or resp_filters when req_action is deny
 /// @todo... throw if there are resp_filters when resp_action is deny
 
-        $config = $config + [
-                'req_match' => ['always' => true],
-                'req_action' => Rule::ACTION_ALLOW,
-                'req_filters' => [],
-                'resp_match' => ['always' => true],
-                'resp_action' => Rule::ACTION_ALLOW,
-                'resp_filters' => []
-            ];
-
         $matcherFactory = $this->getMatcherFactory([]);
 
-        return new Rule(
+        $rule = new Rule(
             $this->parseMatcherConfiguration($config['req_match'], $matcherFactory),
             $this->parseFiltersConfiguration($config['req_filters']),
             $config['req_action'],
@@ -72,6 +73,10 @@ class RuleFactory
             $this->parseFiltersConfiguration($config['resp_filters']),
             $config['resp_action']
         );
+        if ($this->logger && $rule instanceof LoggerAwareInterface) {
+            $rule->setLogger($this->logger);
+        }
+        return $rule;
     }
 
     /**

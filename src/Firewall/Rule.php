@@ -8,12 +8,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerAwareTrait;
 use YADSP\Filter\Request\RequestFilterInterface;
 use YADSP\Filter\Response\ResponseFilterInterface;
-use YADSP\Matcher\ChainFactory;
-use YADSP\Matcher\Logic\AndMatcher;
-use YADSP\Matcher\Logic\MatcherFactory as LogicMatcherFactory;
-use YADSP\Matcher\MatcherFactoryInterface;
-use YADSP\Matcher\MatcherInterface;
-use YADSP\Matcher\Request\MatcherFactory as RequestMatcherFactory;
 use YADSP\Matcher\Request\RequestMatcherInterface;
 use YADSP\Matcher\Response\ResponseMatcherInterface;
 
