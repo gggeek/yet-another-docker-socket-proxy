@@ -7,14 +7,14 @@ namespace YADSP\Matcher;
  */
 trait StringListMatcherTrait
 {
-    /** @var string[] $allowedValues */
-    protected array $allowedValues;
+    /** @var string[] $matchingStrings */
+    protected array $matchingStrings;
 
     /**
      * @param string|string[] $values
      * @throws \Exception
      */
-    protected function setAllowedValues(string|array $values): void
+    protected function setMatchingStrings(string|array $values): void
     {
         if (is_array($values)) {
             if (!$values) {
@@ -24,10 +24,10 @@ trait StringListMatcherTrait
                 if (!is_string($value)) {
                     throw new \Exception('Only arrays of strings are allowed as argument to the matcher');
                 }
-                $this->allowedValues[$this->normalizeValue($value)] = true;
+                $this->matchingStrings[$this->normalizeMatchingString($value)] = true;
             }
         } else {
-            $this->allowedValues = [$this->normalizeValue($values) => true];
+            $this->matchingStrings = [$this->normalizeMatchingString($values) => true];
         }
     }
 
@@ -36,13 +36,13 @@ trait StringListMatcherTrait
      * @param string $value
      * @return string
      */
-    protected function normalizeValue(string $value): string
+    protected function normalizeMatchingString(string $value): string
     {
         return $value;
     }
 
     protected function matchesString(string $value): bool
     {
-        return array_key_exists($value, $this->allowedValues);
+        return array_key_exists($value, $this->matchingStrings);
     }
 }

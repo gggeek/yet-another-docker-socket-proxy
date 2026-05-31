@@ -7,6 +7,11 @@ use Psr\Http\Message\ServerRequestInterface;
 
 abstract class BaseMatcher implements RequestMatcherInterface
 {
+    /**
+     * @param ...$items
+     * @return bool
+     * @throws \Exception
+     */
     public function matches(...$items): bool
     {
         if (count($items) !== 1 || ! $items[0] instanceof ServerRequestInterface) {

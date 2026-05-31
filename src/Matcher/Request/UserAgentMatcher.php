@@ -16,7 +16,7 @@ class UserAgentMatcher extends BaseMatcher
      */
     public function __construct(string|array $filter)
     {
-        $this->setAllowedValues($filter);
+        $this->setMatchingValues($filter);
     }
 
     public function matchesRequest(ServerRequestInterface $request): bool
@@ -25,10 +25,10 @@ class UserAgentMatcher extends BaseMatcher
         /// @todo... log a warning if we are not passed this env var
         $ua = $env['HTTP_USER_AGENT'] ?? '';
 
-        return $this->matchesString($ua);
+        return $this->matchesRegexp($ua);
     }
 
-    protected function normalizeValue(string $value): string
+    protected function normalizeMatchingRegexp(string $value): string
     {
         return $this->wildcardToRegexp($value);
     }

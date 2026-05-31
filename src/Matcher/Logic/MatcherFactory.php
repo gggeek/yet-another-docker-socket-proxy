@@ -21,6 +21,7 @@ class MatcherFactory implements MatcherFactoryInterface
 
     public function supports(string $type): bool
     {
+        $type = strtolower(preg_replace('/:[0-9]+$/', '', trim($type)));
         return in_array($type, ['always', 'and', 'never', 'not', 'or']);
     }
 
@@ -32,8 +33,9 @@ class MatcherFactory implements MatcherFactoryInterface
      */
     public function fromConfiguration(string $type, mixed $values): MatcherInterface
     {
-        $target = strtolower(trim($type));
-        switch($target) {
+        // allow a numeric suffix to be used, so that many matches of the same type can be in an array where the type is key
+        $target = strtolower(preg_replace('/:[0-9]+$/', '', trim($type)));
+        switch ($target) {
             case 'always':
 /// @todo log a warning if $values is falsey
                 return new AlwaysMatcher();

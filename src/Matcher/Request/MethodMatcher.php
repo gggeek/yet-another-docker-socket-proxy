@@ -17,9 +17,9 @@ class MethodMatcher extends BaseMatcher
     public function __construct(string|array $filter)
     {
         if (is_array($filter)) {
-            $this->setAllowedValues(...$filter);
+            $this->setMatchingStrings(...$filter);
         } else {
-            $this->setAllowedValues($filter);
+            $this->setMatchingStrings($filter);
         }
     }
 
@@ -28,7 +28,7 @@ class MethodMatcher extends BaseMatcher
         return $this->matchesString($request->getMethod());
     }
 
-    protected function normalizeValue(string $value): string
+    protected function normalizeMatchingString(string $value): string
     {
         return strtoupper(trim($value));
     }

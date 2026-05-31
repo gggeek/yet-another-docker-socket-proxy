@@ -8,6 +8,8 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use YADSP\Matcher\MatcherFactoryInterface;
 use YADSP\Matcher\MatcherInterface;
+use YADSP\Matcher\Message\BodyMatcher;
+use YADSP\Matcher\Message\HeaderMatcher;
 
 class MatcherFactory implements MatcherFactoryInterface
 {
@@ -20,7 +22,8 @@ class MatcherFactory implements MatcherFactoryInterface
 
     public function supports(string $type): bool
     {
-        return in_array($type, ['body']);
+        $type = strtolower(preg_replace('/:[0-9]+$/', '', trim($type)));
+        return in_array($type, ['body', 'http_header']);
     }
 
     /**
@@ -31,10 +34,21 @@ class MatcherFactory implements MatcherFactoryInterface
      */
     public function fromConfiguration(string $type, mixed $values): MatcherInterface
     {
-        $target = strtolower(trim($type));
+        $target = strtolower(preg_replace('/:[0-9]+$/', '', trim($type)));
         switch($target) {
             case 'body':
                 $matcher = new BodyMatcher($values);
+                break;
+            case 'http_header':
+                if (!is_array($values) || count($values) !== 1) {
+                    throw new \Exception("Invalid response matching configuration: '$type' should be followed with an object with 1 element only");
+                }
+                $hv = reset($values);
+                $hn = array_key_first($values);
+                if (!is_string($hn) || !(is_string($hv) || is_array($hv))) {
+                    throw new \Exception("Invalid response matching configuration: '$type' should be followed with an object with 1 element: a string name, and a string or string[] for values");
+                }
+                $matcher = new HeaderMatcher($hn, $hv);
                 break;
             default:
                 throw new \Exception("Invalid response matching configuration: '$type' => " . var_export($values, true));

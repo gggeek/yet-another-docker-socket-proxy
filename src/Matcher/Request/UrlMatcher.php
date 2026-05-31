@@ -16,23 +16,33 @@ class UrlMatcher extends BaseMatcher
      */
     public function __construct(string|array $filter)
     {
-        if (is_array($filter)) {
-            $this->setAllowedValues(...$filter);
-        } else {
-            $this->setAllowedValues($filter);
-        }
+        $this->setMatchingValues($filter);
     }
 
     public function matchesRequest(ServerRequestInterface $request): bool
     {
-        return $this->matchesString($request->getRequestTarget());
+        return $this->matchesRegexp($request->getRequestTarget());
     }
 
-    /// @todo add wildcard support...
-    /// @todo add '/vXX/' prefix support...
-    /// @todo add support for query strings and anchors
-    protected function normalizeValue(string $value): string
+    protected function normalizeMatchingRegexp(string $value): string
     {
-        return '^' . preg_quote($value, $this->regexpDelimiter) . '$';
+        $prefix = '';
+        // add '/vXX/' prefix support
+        if (!preg_match('#^/v[0-9.]+/#', $value)) {
+            $prefix = '/v[0-9.]+/';
+        }
+        // add support for query strings and anchors
+        $postfix = '';
+        if (!str_contains($value, '?')) {
+            $postfix .= '?';
+        }
+        if (!str_contains($value, '#')) {
+            $postfix .= '#';
+        }
+        if ($postfix !== '') {
+            $postfix = "[$postfix].*";
+        }
+
+        return '^' . $prefix . str_replace(['*'], ['.*'], preg_quote($value, $this->regexpDelimiter)) . $postfix . '$';
     }
 }

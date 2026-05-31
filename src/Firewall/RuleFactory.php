@@ -10,15 +10,18 @@ use YADSP\Matcher\ChainFactory;
 use YADSP\Matcher\Logic\AndMatcher;
 use YADSP\Matcher\Logic\MatcherFactory as LogicMatcherFactory;
 use YADSP\Matcher\MatcherFactoryInterface;
-use YADSP\Matcher\MatcherInterface;
 use YADSP\Matcher\Request\MatcherFactory as RequestMatcherFactory;
+use YADSP\Matcher\Request\RequestMatcherInterface;
+use YADSP\Matcher\Response\MatcherFactory as ResponseMatcherFactory;
+use YADSP\Matcher\Response\ResponseMatcherInterface;
 
 class RuleFactory
 {
     use LoggerAwareTrait;
     use PrivateLoggerTrait;
 
-    protected MatcherFactoryInterface|null $matcherFactory = null;
+    protected MatcherFactoryInterface|null $requestMatcherFactory = null;
+    protected MatcherFactoryInterface|null $responseMatcherFactory = null;
 
     public function __construct(LoggerInterface|null $logger = null)
     {
@@ -63,13 +66,14 @@ class RuleFactory
 /// @todo... throw if there are req_filters, resp_match, resp_action or resp_filters when req_action is deny
 /// @todo... throw if there are resp_filters when resp_action is deny
 
-        $matcherFactory = $this->getMatcherFactory([]);
+        $requestMatcherFactory = $this->getRequestMatcherFactory([]);
+        $responseMatcherFactory = $this->getResponseMatcherFactory([]);
 
         $rule = new Rule(
-            $this->parseMatcherConfiguration($config['req_match'], $matcherFactory),
+            $this->parseMatcherConfiguration($config['req_match'], $requestMatcherFactory),
             $this->parseFiltersConfiguration($config['req_filters']),
             $config['req_action'],
-            $this->parseMatcherConfiguration($config['resp_match'], $matcherFactory),
+            $this->parseMatcherConfiguration($config['resp_match'], $responseMatcherFactory),
             $this->parseFiltersConfiguration($config['resp_filters']),
             $config['resp_action']
         );
@@ -82,7 +86,7 @@ class RuleFactory
     /**
      * @throws \Exception
      */
-    protected function parseMatcherConfiguration(array $matcherSpec, MatcherFactoryInterface $matcherFactory): MatcherInterface
+    protected function parseMatcherConfiguration(array $matcherSpec, MatcherFactoryInterface $matcherFactory): RequestMatcherInterface|ResponseMatcherInterface
     {
         if (!$matcherSpec) {
             throw new \Exception("The value for each rule 'match' section must be a non-empty array of conditions");
@@ -106,20 +110,34 @@ class RuleFactory
     }
 
     /**
-    /// @todo...split reqM and respM
      * @param array $config
      * @return \YADSP\Matcher\MatcherFactoryInterface
      * @throws \Exception
      */
-    protected function getMatcherFactory(array $config): MatcherFactoryInterface
+    protected function getRequestMatcherFactory(array $config): MatcherFactoryInterface
     {
-        if ($this->matcherFactory === null) {
+        if ($this->requestMatcherFactory === null) {
             $logicMatcherFactory = new LogicMatcherFactory($this->logger);
-            $this->matcherFactory = new ChainFactory([new RequestMatcherFactory($this->logger), $logicMatcherFactory]);
+            $this->requestMatcherFactory = new ChainFactory([new RequestMatcherFactory($this->logger), $logicMatcherFactory]);
             // inception! ;-)
-            $logicMatcherFactory->setMatcherFactory($this->matcherFactory);
+            $logicMatcherFactory->setMatcherFactory($this->requestMatcherFactory);
         }
-        return $this->matcherFactory;
+        return $this->requestMatcherFactory;
     }
 
+    /**
+     * @param array $config
+     * @return \YADSP\Matcher\MatcherFactoryInterface
+     * @throws \Exception
+     */
+    protected function getResponseMatcherFactory(array $config): MatcherFactoryInterface
+    {
+        if ($this->responseMatcherFactory === null) {
+            $logicMatcherFactory = new LogicMatcherFactory($this->logger);
+            $this->responseMatcherFactory = new ChainFactory([new responseMatcherFactory($this->logger), $logicMatcherFactory]);
+            // inception! ;-)
+            $logicMatcherFactory->setMatcherFactory($this->responseMatcherFactory);
+        }
+        return $this->responseMatcherFactory;
+    }
 }

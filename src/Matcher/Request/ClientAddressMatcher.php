@@ -16,7 +16,7 @@ class ClientAddressMatcher extends BaseMatcher
      */
     public function __construct(string|array $filter)
     {
-        $this->setAllowedValues($filter);
+        $this->setMatchingValues($filter);
     }
 
     public function matchesRequest(ServerRequestInterface $request): bool
@@ -25,10 +25,10 @@ class ClientAddressMatcher extends BaseMatcher
         /// @todo... log a warning if we are not passed this env var
         $clientAddress = $env['REMOTE_ADDR'] ?? '';
 
-        return $this->matchesString($clientAddress);
+        return $this->matchesRegexp($clientAddress);
     }
 
-    protected function normalizeValue(string $value): string
+    protected function normalizeMatchingRegexp(string $value): string
     {
         return $this->wildcardToRegexp($value);
     }
