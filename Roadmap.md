@@ -1,15 +1,15 @@
 - Proxy
   - matching requests/responses
-    - test using and/or/not machers
-    - todos in Rule class
-	- urls: accommodate the /vXXX/ prefix transparently
-	- urls: accommodate ``?aaa` and ``#bbb` transparently by default
+    - test using and/or/not machers; body matcher; http_header matcher
+    - implement todos in Rule class
+	- urls: accommodate the /vXXX/ prefix transparently -> ok?
+	- urls: accommodate ``?aaa` and ``#bbb` transparently by default -> ok?
 	  Test the limits of what docker server answers on its own
 	    version?a#b/c no
 	    version?a#b yes
 	    version/c no
 	- urls: query string
-	- req. body: literal, wildcard, regexp, jq-like matching
+	- req. body: literal, wildcard (ok?), regexp, jq-like matching
     - document the wildcard matching format
     - also, support other wildcards besides the ``*`?
       - glob has: ? for one char, [...] for char ranges, [!...] for negated char ranges
@@ -18,7 +18,6 @@
 	- docker tags (how ??)
     - client
       - support v6 IPs
-    - user-specified http headers
     - other? eg. ssl on
     - review: GET /containers/{id}/attach/ws allows to attach to a container stdin ? Is that RO ?
     - review the haproxy rules in NC-AIO haproxy.cfg
@@ -27,6 +26,7 @@
   - test: support for `tcp:/` sockets
   - look at all cases mentioned at https://hackviser.com/tactics/pentesting/services/docker
   - tls support
+  - drop MatcherInterface; move Logic/* matchers to MessageInterface
 
 - add config examples and/or a config generator for common usecases, eg. 'all readonly', 'redact secrets', etc...
 
@@ -53,6 +53,8 @@
   - run it on gha
   - look for existing test suites, ex for https://github.com/fussybeaver/bollard, https://github.com/denibertovic/docker-hs,
     https://github.com/clue/reactphp-docker, https://github.com/moby/moby/tree/master/client
+
+- rebase on top of https://github.com/gggeek/yet-another-waf-core
 
 - allow fine-tuning resource usage? timeouts, maxconn, etc... (It's probably already possible via Caddy env vars. Test it...)
 - allow end users to inject
