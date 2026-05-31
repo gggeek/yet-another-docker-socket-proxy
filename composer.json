@@ -1,9 +1,9 @@
 {
     "name": "gggeek/yet-another-docker-socket-proxy",
-    "description": "A php library for building xmlrpc clients and servers",
+    "description": "A WAF to filter access to the Docker Daemon API",
     "license": "GPL-2.0",
     "homepage": "https://gggeek.github.io/docker-proxy-filter-php/",
-    "keywords": [ "docker", "proxy","security" ],
+    "keywords": [ "docker", "proxy", "security", "api", "firewall" ],
     "require": {
         "php": "^8.2",
         "ext-ctype": "*",
