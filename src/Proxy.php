@@ -54,6 +54,7 @@ class Proxy extends BaseProxy
     /**
      * Generates an "error happened" response
      * @todo make it easy to change this from config
+     * @todo allow setting a 'debug' mode in which the returned json includes the full exception message
      * @return ResponseInterface
      */
     protected function errorResponse(ServerRequestInterface $request, \Exception|null $e = null): ResponseInterface
