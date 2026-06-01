@@ -2,11 +2,10 @@
 
 Yet another security-enhancing proxy for the Docker Socket.
 
-Aka. a small forward proxy for filtering the responses of calls to the Docker API to only what you want to expose.
+Aka. a small forward proxy for filtering the calls to the Docker API to only what you want to expose.
 
 It is a "level 7" proxy, in that it is aware of the semantics of the Docker API protocol, and it allows both filtering
 the Requests and rewriting the Responses.
-
 
 ## Why ?
 
@@ -26,12 +25,7 @@ It was inspired by https://blog.foxxmd.dev/posts/restricting-socket-proxy-by-con
 
 ## WORK IN PROGRESS !!!
 
-The following features are not implemented yet:
-- filtering requests based on docker tags
-- filtering the responses
-- installation as standalone executable or via a prebuilt container
-
-*Stay tuned*
+See [Roadmap.md] for features not yet implemented
 
 ## Installation
 
@@ -50,7 +44,7 @@ For now:
        -v .:/app:ro \
        -v ./docker/Caddyfile:/etc/frankenphp/Caddyfile:ro \
        -v /var/run/docker.sock:/var/run/docker.sock:ro \
-       -e YADSP_CONFIG='[[{"some_filter": "some value"}]]'
+       -e YADSP_CONFIG='{"allow version info":{"url": "/version"}}'
        dunglas/frankenphp
    ```
 4. export `DOCKER_HOST=tcp://127.0.0.1:2375`
@@ -75,16 +69,15 @@ The format to be used in both cases is Json.
 
 The configuration format is:
 - a json object, where each element is a rule (the names of rules are not important - they are mostly of use to debug configuration errors)
-- every rule is an array, each element of which is a match condition
-- a match condition is a json object, with the key being the type of match, and the value generally being a single string,
-  or an array of strings.
+- every rule is a json object, each element of which is a match condition
+- a match condition is made of a key, being the type of match, and of a value, which is generally a single string,
+  or an array of strings, in which case any of the strings is considered valid.
 
 The logic applied is:
-- by default the firewall only allows access to the docker '/version' and '/ping api calls', everything else gets a 404
-  response
+- by default the firewall only allows access to the docker and '/ping' api call, everything else gets a 404 response
 - the rules are evaluated in the order that they are defined
-- for each rule, all its conditions are verified
-- if the conditions match, the request is allowed to go through
+- for each rule, all its match conditions are verified
+- if all the conditions of the rule match, the request is allowed to go through
 
 The supported match conditions are:
 - `client_address` - a string or array of strings. IPv4 only for now. '*' wildcards supported
@@ -100,18 +93,29 @@ NB: see the [Docker API reference](https://docs.docker.com/reference/api/engine)
 ### Allow full access, read-only
 
 ```json
-[[{"http_method":  ["GET", "HEAD"]}]]
+{"read-only access": {"http_method":  ["GET", "HEAD"]}}
 ```
 
 This relies on the Docker API following RESTful semantics.
 
 ## Design principles
-- php 8.2 and up
-- compact code. Trying not to rely on too many dependencies
-- hackable. Using the psr-7, psr-15, psr-18 means it should be easy to extend/embed the Proxy class in other middlewares
-- maximum speed of execution / minimum possible memory usage are not the main target. Safety, robustness and flexibility
-  come first
-- good error messages. Better overly verbose than cryptic
+
+1. Security first. No requests are allowed by default, everything has to be whitelisted.
+2. Ease of use. The users should not have to learn the equivalent of the Varnish VCL or HAProxy configuration language
+   to achieve common scenarios. Error messages should be clear and rather verbose than cryptic. Logging facilities
+   should be extensive.
+3. Flexibility. The proxy should be easy to configure for common scenarios and extend to achieve uncommon ones
+4. Performance. Maximum speed of execution and minimum cpu usage / memory usage are _important_ but not the main concern.
+   Safety, robustness and flexibility come first.
+
+Which translates into:
+- PHP 8.2 and up
+- strict typing everywhere
+- using DI patterns as much as possible
+- using the psr-7, psr-15, psr-18 interfaces means it should be easy to extend/embed the Proxy class in other middlewares
+- avoid relying on too many dependencies - f.e. no Monolog, Symfony ConfigTreeBuilder
+- delegate all possible processing to the 'bootstrap' phase, so that the processing loop can be as efficient as possible
 
 ## FAQ
+
 ...

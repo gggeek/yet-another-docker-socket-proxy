@@ -3,19 +3,12 @@ declare(strict_types=1);
 
 namespace YADSP\Firewall;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use YADSP\Filter\Bidirectional\BidirectionalFilterInterface;
-use YADSP\Logger\PrivateLoggerTrait;
-use YADSP\Stdlib;
+use YAWAF\Core\Firewall\Firewall as baseFirewall;
 
 /**
  * The class doing the actual filtering of Requests and Responses
  */
-class Firewall implements BidirectionalFilterInterface, LoggerAwareInterface
+class Firewall extends baseFirewall
 {
     public const DefaultFallbackConfiguration = [
         'req_match' => [
@@ -28,52 +21,4 @@ class Firewall implements BidirectionalFilterInterface, LoggerAwareInterface
         'resp_action' => 'allow',
         'resp_filters' => [],
     ];
-
-    use LoggerAwareTrait;
-    use PrivateLoggerTrait;
-
-    /** @var Rule[] */
-    protected array $rules;
-    protected null|Rule $currentRule = null;
-
-    /**
-     * @param Rule[] $rules
-     * @throws \Exception
-     */
-    public function __construct(array $rules, LoggerInterface|null $logger = null)
-    {
-        $this->logger = $logger;
-        if (!Stdlib::array_of($rules, Rule::class)) {
-            throw new \Exception("Array passed to " . static::class . " constructor must contain only instances of " . Rule::class);
-        }
-        $this->rules = $rules;
-    }
-
-    public function filterRequest(ServerRequestInterface $request): ServerRequestInterface|false
-    {
-        $this->currentRule = null;
-        foreach($this->rules as $ruleName => $rule) {
-            if ($rule->matchesRequest($request)) {
-                $this->debug("Firewall rule '$ruleName' matched request: " . $this->request2Log($request));
-                $this->currentRule = $rule;
-                return $rule->filterRequest($request);
-            }
-        }
-        $this->debug("No firewall rule matched request: " . $this->request2Log($request));
-        return false;
-    }
-
-    public function filterResponse(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface|false
-    {
-        $response = $this->currentRule->filterResponse($response, $request);
-        $this->currentRule = null;
-        return $response;
-    }
-
-    // *** Logging ***
-
-    protected function request2Log(ServerRequestInterface $request): string
-    {
-        return $request->getMethod() . ' ' . $request->getUri();
-    }
 }

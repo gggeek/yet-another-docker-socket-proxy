@@ -4,7 +4,8 @@ declare(strict_types=1);
 namespace YADSP\Matcher\Request;
 
 use Psr\Http\Message\ServerRequestInterface;
-use YADSP\Matcher\RegExpListMatcherTrait;
+use YAWAF\Core\Matcher\RegExpListMatcherTrait;
+use YAWAF\Core\Matcher\Request\BaseMatcher;
 
 class UrlMatcher extends BaseMatcher
 {

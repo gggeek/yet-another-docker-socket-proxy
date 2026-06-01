@@ -6,10 +6,10 @@ namespace YADSP\Matcher\Response;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use YADSP\Matcher\MatcherFactoryInterface;
-use YADSP\Matcher\MatcherInterface;
-use YADSP\Matcher\Message\BodyMatcher;
-use YADSP\Matcher\Message\HeaderMatcher;
+use YAWAF\Core\Matcher\MatcherFactoryInterface;
+use YAWAF\Core\Matcher\MatcherInterface;
+use YAWAF\Core\Matcher\Message\BodyMatcher;
+use YAWAF\Core\Matcher\Message\HeaderMatcher;
 
 class MatcherFactory implements MatcherFactoryInterface
 {
@@ -29,7 +29,7 @@ class MatcherFactory implements MatcherFactoryInterface
     /**
      * @param string $type
      * @param mixed $values
-     * @return \YADSP\Matcher\MatcherInterface
+     * @return MatcherInterface
      * @throws \Exception
      */
     public function fromConfiguration(string $type, mixed $values): MatcherInterface

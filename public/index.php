@@ -6,11 +6,12 @@ require __DIR__ . '/../vendor/autoload.php';
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
-use YADSP\Filter\Bidirectional\FilterChain;
-use YADSP\Filter\Bidirectional\Tracer;
-use YADSP\Logger\ErrorLogger;
-use YADSP\Logger\FileLogger;
-use YADSP\Logger\FrankenPHPLogger;
+use YAWAF\Core\Filter\Bidirectional\FilterChain;
+use YAWAF\Core\Filter\Bidirectional\Tracer;
+use YAWAF\Core\Logger\ErrorLogger;
+use YAWAF\Core\Logger\FileLogger;
+use YAWAF\Core\Logger\FrankenPHPLogger;
+use YADSP\Firewall\FirewallFactory;
 use YADSP\Proxy;
 
 if (array_key_exists('YADSP_LOG_FILE', $_SERVER) && trim($_SERVER['YADSP_LOG_FILE']) !== '') {
@@ -28,7 +29,7 @@ if (array_key_exists('DOCKER_HOST', $_SERVER) && trim($_SERVER['DOCKER_HOST']) !
     $upstream = $_SERVER['DOCKER_HOST'];
 }
 
-$firewallFactory = new \YADSP\Firewall\FirewallFactory($logger);
+$firewallFactory = new FirewallFactory($logger);
 $config = array_key_exists('YADSP_CONFIG', $_SERVER) ? trim($_SERVER['YADSP_CONFIG']) : '';
 $configFile = array_key_exists('YADSP_CONFIG_FILE', $_SERVER) ? trim($_SERVER['YADSP_CONFIG_FILE']) : '';
 if ($configFile !== '') {

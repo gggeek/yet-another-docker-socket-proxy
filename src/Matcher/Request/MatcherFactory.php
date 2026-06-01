@@ -6,10 +6,14 @@ namespace YADSP\Matcher\Request;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use YADSP\Matcher\MatcherFactoryInterface;
-use YADSP\Matcher\MatcherInterface;
-use YADSP\Matcher\Message\BodyMatcher;
-use YADSP\Matcher\Message\HeaderMatcher;
+use YAWAF\Core\Matcher\MatcherFactoryInterface;
+use YAWAF\Core\Matcher\MatcherInterface;
+use YAWAF\Core\Matcher\Message\BodyMatcher;
+use YAWAF\Core\Matcher\Message\HeaderMatcher;
+use YAWAF\Core\Matcher\Request\ClientAddressMatcher;
+use YAWAF\Core\Matcher\Request\ClientPortMatcher;
+use YAWAF\Core\Matcher\Request\MethodMatcher;
+use YAWAF\Core\Matcher\Request\UserAgentMatcher;
 
 class MatcherFactory implements MatcherFactoryInterface
 {
@@ -29,7 +33,7 @@ class MatcherFactory implements MatcherFactoryInterface
     /**
      * @param string $type
      * @param mixed $values
-     * @return \YADSP\Matcher\MatcherInterface
+     * @return MatcherInterface
      * @throws \Exception
      */
     public function fromConfiguration(string $type, mixed $values): MatcherInterface
@@ -56,7 +60,6 @@ class MatcherFactory implements MatcherFactoryInterface
                 }
                 $matcher = new HeaderMatcher($hn, $hv);
                 break;
-                break;
             case 'http_method':
                 $matcher = new MethodMatcher($values);
                 break;
@@ -64,7 +67,8 @@ class MatcherFactory implements MatcherFactoryInterface
                 $matcher = new UrlMatcher($values);
                 break;
             case 'user_agent':
-                return new UserAgentMatcher($values);
+                $matcher = new UserAgentMatcher($values);
+                break;
             default:
                 throw new \Exception("Invalid request matching configuration: '$type' => " . var_export($values, true));
         }

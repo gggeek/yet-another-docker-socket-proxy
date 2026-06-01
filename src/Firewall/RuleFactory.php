@@ -5,15 +5,16 @@ namespace YADSP\Firewall;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use YADSP\Logger\PrivateLoggerTrait;
-use YADSP\Matcher\ChainFactory;
-use YADSP\Matcher\Logic\AndMatcher;
-use YADSP\Matcher\Logic\MatcherFactory as LogicMatcherFactory;
-use YADSP\Matcher\MatcherFactoryInterface;
 use YADSP\Matcher\Request\MatcherFactory as RequestMatcherFactory;
-use YADSP\Matcher\Request\RequestMatcherInterface;
 use YADSP\Matcher\Response\MatcherFactory as ResponseMatcherFactory;
-use YADSP\Matcher\Response\ResponseMatcherInterface;
+use YAWAF\Core\Firewall\Rule;
+use YAWAF\Core\Logger\PrivateLoggerTrait;
+use YAWAF\Core\Matcher\ChainFactory;
+use YAWAF\Core\Matcher\Logic\AndMatcher;
+use YAWAF\Core\Matcher\Logic\MatcherFactory as LogicMatcherFactory;
+use YAWAF\Core\Matcher\MatcherFactoryInterface;
+use YAWAF\Core\Matcher\Request\RequestMatcherInterface;
+use YAWAF\Core\Matcher\Response\ResponseMatcherInterface;
 
 class RuleFactory
 {
@@ -111,7 +112,7 @@ class RuleFactory
 
     /**
      * @param array $config
-     * @return \YADSP\Matcher\MatcherFactoryInterface
+     * @return MatcherFactoryInterface
      * @throws \Exception
      */
     protected function getRequestMatcherFactory(array $config): MatcherFactoryInterface
@@ -127,7 +128,7 @@ class RuleFactory
 
     /**
      * @param array $config
-     * @return \YADSP\Matcher\MatcherFactoryInterface
+     * @return MatcherFactoryInterface
      * @throws \Exception
      */
     protected function getResponseMatcherFactory(array $config): MatcherFactoryInterface
