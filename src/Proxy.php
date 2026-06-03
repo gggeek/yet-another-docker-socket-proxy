@@ -41,7 +41,6 @@ class Proxy extends BaseProxy
      * Generates an "access denied" response: mimic what the Docker daemon returns by default for not-accepted requests,
      * but give a specific error text.
      * @todo make it easy to change this from config
-     * @return ResponseInterface
      */
     protected function deniedResponse(ServerRequestInterface $request): ResponseInterface
     {
@@ -52,10 +51,10 @@ class Proxy extends BaseProxy
     }
 
     /**
-     * Generates an "error happened" response
+     * Generates an "error happened" response: mimic what the Docker daemon returns by default for not-accepted requests,
+     * but give a specific error text.
      * @todo make it easy to change this from config
      * @todo allow setting a 'debug' mode in which the returned json includes the full exception message
-     * @return ResponseInterface
      */
     protected function errorResponse(ServerRequestInterface $request, \Exception|null $e = null): ResponseInterface
     {

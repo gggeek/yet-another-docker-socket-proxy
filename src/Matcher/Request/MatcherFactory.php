@@ -4,31 +4,17 @@ declare(strict_types=1);
 namespace YADSP\Matcher\Request;
 
 use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use YAWAF\Core\Matcher\MatcherFactoryInterface;
 use YAWAF\Core\Matcher\MatcherInterface;
-use YAWAF\Core\Matcher\Message\BodyMatcher;
-use YAWAF\Core\Matcher\Message\HeaderMatcher;
-use YAWAF\Core\Matcher\Request\ClientAddressMatcher;
-use YAWAF\Core\Matcher\Request\ClientPortMatcher;
-use YAWAF\Core\Matcher\Request\MethodMatcher;
-use YAWAF\Core\Matcher\Request\UserAgentMatcher;
+use YAWAF\Core\Matcher\Request\MatcherFactory as BaseMatcherFactory;
 
-class MatcherFactory implements MatcherFactoryInterface
+class MatcherFactory extends BaseMatcherFactory
 {
-    use LoggerAwareTrait;
-
-    public function __construct(LoggerInterface|null $logger = null)
-    {
-        $this->logger = $logger;
-    }
-
-    public function supports(string $type): bool
+    // No extra tags compared to parent, for the moment...
+    /*public function supports(string $type): bool
     {
         $type = strtolower(preg_replace('/:[0-9]+$/', '', trim($type)));
         return in_array($type, ['body', 'client_address', 'client_port', 'http_header', 'http_method', 'url', 'user_agent']);
-    }
+    }*/
 
     /**
      * @param string $type
@@ -40,37 +26,12 @@ class MatcherFactory implements MatcherFactoryInterface
     {
         $target = strtolower(preg_replace('/:[0-9]+$/', '', trim($type)));
         switch($target) {
-            case 'body':
-                $matcher = new BodyMatcher($values);
-                break;
-            case 'client_address':
-                $matcher = new ClientAddressMatcher($values);
-                break;
-            case 'client_port':
-                $matcher = new ClientPortMatcher($values);
-                break;
-            case 'http_header':
-                if (!is_array($values) || count($values) !== 1) {
-                    throw new \Exception("Invalid response matching configuration: '$type' should be followed with an object with 1 element only");
-                }
-                $hv = reset($values);
-                $hn = array_key_first($values);
-                if (!is_string($hn) || !(is_string($hv) || is_array($hv))) {
-                    throw new \Exception("Invalid response matching configuration: '$type' should be followed with an object with 1 element: a string name, and a string or string[] for values");
-                }
-                $matcher = new HeaderMatcher($hn, $hv);
-                break;
-            case 'http_method':
-                $matcher = new MethodMatcher($values);
-                break;
             case 'url':
+                // use a custom URL matcher
                 $matcher = new UrlMatcher($values);
                 break;
-            case 'user_agent':
-                $matcher = new UserAgentMatcher($values);
-                break;
             default:
-                throw new \Exception("Invalid request matching configuration: '$type' => " . var_export($values, true));
+                return parent::fromConfiguration($type, $values);
         }
         if ($this->logger && $matcher instanceof LoggerAwareInterface) {
             $matcher->setLogger($this->logger);

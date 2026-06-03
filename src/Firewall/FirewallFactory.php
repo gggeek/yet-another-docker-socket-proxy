@@ -2,55 +2,11 @@
 
 namespace YADSP\Firewall;
 
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use YAWAF\Core\Logger\PrivateLoggerTrait;
+use YAWAF\Core\Firewall\FirewallFactory as BaseFirewallFactory;
 
-class FirewallFactory
+class FirewallFactory extends BaseFirewallFactory
 {
-    use LoggerAwareTrait;
-    use PrivateLoggerTrait;
-
     protected array|null $fallbackConfiguration = null;
-
-    public function __construct(LoggerInterface|null $logger = null)
-    {
-        $this->logger = $logger;
-    }
-
-    /**
-     * @param string $configurationFile
-     * @return Firewall
-     * @throws \Exception
-     * @todo allow parsing yaml files besides json ones
-     */
-    public function fromConfigFile(string $configurationFile): Firewall
-    {
-        $this->info("Loading firewall configuration from file '$configurationFile'");
-        if (($configString = @file_get_contents($configurationFile)) === false) {
-            throw new \Exception("Can not load configuration file '$configurationFile' " . error_get_last()['message']);
-        }
-        return $this->fromConfigString($configString);
-    }
-
-    /**
-     * @param string $configuration
-     * @return static
-     * @throws \Exception
-     */
-    public function fromConfigString(string $configuration): Firewall
-    {
-        //$this->debug("Loading firewall configuration from string");
-        if (trim($configuration) === '') {
-            $config = [];
-        } else {
-            $config = @json_decode($configuration, true);
-            if (!is_array($config)) {
-                throw new \Exception("The configuration passed in is not a valid json array. Error: " . json_last_error_msg());
-            }
-        }
-        return $this->fromConfiguration($config);
-    }
 
     /**
      * @param array $config
@@ -85,9 +41,6 @@ class FirewallFactory
         foreach($config as $ruleName => $ruleSpec) {
             try {
                 $rule = $ruleFactory->fromConfiguration($ruleSpec);
-                //if ($logger && $rule instanceof LoggerAwareInterface) {
-                //    $rule->setLogger($logger);
-                //}
                 $rules[$ruleName] = $rule;
             } catch (\Exception $e) {
                 throw new \Exception("Error parsing firewall rule '$ruleName': " . $e->getMessage());
@@ -100,9 +53,8 @@ class FirewallFactory
     /**
      * Returns the default filter applied to all clients - let ping and version requests through
      * @return array
-     * @todo allow access to /events?
      */
-    protected function getFallbackConfiguration(): array
+    public function getFallbackConfiguration(): array
     {
         return is_array($this->fallbackConfiguration) ? $this->fallbackConfiguration : Firewall::DefaultFallbackConfiguration;
     }
