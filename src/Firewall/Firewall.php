@@ -12,7 +12,7 @@ class Firewall extends baseFirewall
 {
     public const DefaultFallbackConfiguration = [
         'req_match' => [
-            'url' => '/_ping', // /version gets disabled out of the box - in case the version number might be useful to attackers...
+            'url_path' => '/_ping', // /version gets disabled out of the box - in case the version number might be useful to attackers...
             'http_method' => ['GET', 'HEAD'],
         ],
         'req_filters' => [],

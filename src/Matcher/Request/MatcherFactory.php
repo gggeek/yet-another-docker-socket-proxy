@@ -26,9 +26,9 @@ class MatcherFactory extends BaseMatcherFactory
     {
         $target = strtolower(preg_replace('/:[0-9]+$/', '', trim($type)));
         switch($target) {
-            case 'url':
+            case 'url_path':
                 // use a custom URL matcher
-                $matcher = new UrlMatcher($values);
+                $matcher = new PathMatcher($values);
                 break;
             default:
                 return parent::fromConfiguration($type, $values);

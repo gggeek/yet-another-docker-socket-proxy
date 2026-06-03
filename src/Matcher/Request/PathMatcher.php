@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace YADSP\Matcher\Request;
 
-use YAWAF\Core\Matcher\Request\UrlMatcher as BaseUrlMatcher;
+use YAWAF\Core\Matcher\Request\PathMatcher as BasePathMatcher;
 
-class UrlMatcher extends BaseUrlMatcher
+class PathMatcher extends BasePathMatcher
 {
     /**
      * @param string|string[] $filter
@@ -13,6 +13,6 @@ class UrlMatcher extends BaseUrlMatcher
      */
     public function __construct(string|array $filter)
     {
-        parent::__construct($filter, true, true, '(/v[0-9.]+/)?');
+        parent::__construct($filter, '(/v[0-9.]+/)?');
     }
 }
