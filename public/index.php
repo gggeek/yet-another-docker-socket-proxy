@@ -14,53 +14,59 @@ use YAWAF\Core\Logger\FrankenPHPLogger;
 use YADSP\Firewall\FirewallFactory;
 use YADSP\Proxy;
 
-if (array_key_exists('YADSP_LOG_FILE', $_SERVER) && trim($_SERVER['YADSP_LOG_FILE']) !== '') {
-    $logger = new FileLogger($_SERVER['YADSP_LOG_FILE'], $_SERVER['YADSP_LOG_LEVEL'] ?? 'warning');
-} else {
-    if (function_exists('frankenphp_log')) {
-        $logger = new FrankenPHPLogger();
-    } else {
-        $logger = new ErrorLogger();
-    }
-}
-
-$upstream = Proxy::DEFAULT_UPSTREAM;
-if (array_key_exists('DOCKER_HOST', $_SERVER) && trim($_SERVER['DOCKER_HOST']) !== '') {
-    $upstream = $_SERVER['DOCKER_HOST'];
-}
-
-$firewallFactory = new FirewallFactory($logger);
-$config = array_key_exists('YADSP_CONFIG', $_SERVER) ? trim($_SERVER['YADSP_CONFIG']) : '';
-$configFile = array_key_exists('YADSP_CONFIG_FILE', $_SERVER) ? trim($_SERVER['YADSP_CONFIG_FILE']) : '';
-if ($configFile !== '') {
-    if ($config !== '') {
-        throw new \Exception("Can not use at the same time env vars YADSP_CONFIG and YADSP_CONFIG_FILE");
-    }
-    $filter = $firewallFactory->fromConfigFile($configFile);
-} else {
-    $filter = $firewallFactory->fromConfigString($config);
-}
-
-# NB: the traces files will contain ALL DATA sent to and received from the Docker daemon.
-# This has serious security implications. Please only enable this when troubleshooting / developing the YADSP itself.
-# NB: the tracer could be injected either in front (before) or in the back of (after) the firewall.
-#     In front, it will log what the Docker client sends/received.
-#     In the back, it will log that ise sent/received to the Docker daemon
-if (array_key_exists('YADSP_TRACE_FILE', $_SERVER) && trim($_SERVER['YADSP_TRACE_FILE']) !== '') {
-    $filter = new FilterChain([new Tracer($_SERVER['YADSP_TRACE_FILE']), $filter]);
-}
-
-$proxy = new Proxy($filter, $upstream, null, $logger);
-
-$psr17Factory = new Psr17Factory();
-$creator = new ServerRequestCreator(
-    $psr17Factory, // ServerRequestFactory
-    $psr17Factory, // UriFactory
-    $psr17Factory, // UploadedFileFactory
-    $psr17Factory  // StreamFactory
-);
-
 $emitter = new SapiEmitter();
+
+try {
+    if (array_key_exists('YADSP_LOG_FILE', $_SERVER) && trim($_SERVER['YADSP_LOG_FILE']) !== '') {
+        $logger = new FileLogger($_SERVER['YADSP_LOG_FILE'], $_SERVER['YADSP_LOG_LEVEL'] ?? 'warning');
+    } else {
+        if (function_exists('frankenphp_log')) {
+            $logger = new FrankenPHPLogger();
+        } else {
+            $logger = new ErrorLogger();
+        }
+    }
+
+    $upstream = Proxy::DEFAULT_UPSTREAM;
+    if (array_key_exists('DOCKER_HOST', $_SERVER) && trim($_SERVER['DOCKER_HOST']) !== '') {
+        $upstream = $_SERVER['DOCKER_HOST'];
+    }
+
+    $firewallFactory = new FirewallFactory($logger);
+    $config = array_key_exists('YADSP_CONFIG', $_SERVER) ? trim($_SERVER['YADSP_CONFIG']) : '';
+    $configFile = array_key_exists('YADSP_CONFIG_FILE', $_SERVER) ? trim($_SERVER['YADSP_CONFIG_FILE']) : '';
+    if ($configFile !== '') {
+        if ($config !== '') {
+            throw new \Exception("Can not use at the same time env vars YADSP_CONFIG and YADSP_CONFIG_FILE");
+        }
+        $filter = $firewallFactory->fromConfigFile($configFile);
+    } else {
+        $filter = $firewallFactory->fromConfigString($config);
+    }
+
+    // NB: the traces files will contain ALL DATA sent to and received from the Docker daemon.
+    // This has serious security implications. Please only enable this when troubleshooting / developing the YADSP itself.
+    // NB: the tracer could be injected either in front (before) or in the back of (after) the firewall.
+    //     In front, it will log what the Docker client sends/received.
+    //     In the back, it will log that ise sent/received to the Docker daemon
+    if (array_key_exists('YADSP_TRACE_FILE', $_SERVER) && trim($_SERVER['YADSP_TRACE_FILE']) !== '') {
+        $filter = new FilterChain([new Tracer($_SERVER['YADSP_TRACE_FILE']), $filter]);
+    }
+
+    $proxy = new Proxy($filter, $upstream, null, $logger);
+
+    $psr17Factory = new Psr17Factory();
+    $creator = new ServerRequestCreator(
+        $psr17Factory, // ServerRequestFactory
+        $psr17Factory, // UriFactory
+        $psr17Factory, // UploadedFileFactory
+        $psr17Factory  // StreamFactory
+    );
+
+} catch (\Throwable $e) {
+    $emitter->emit(Proxy::getErrorResponse($e));
+    exit();
+}
 
 $handler = function() use($creator, $proxy, $emitter) {
     $serverRequest = $creator->fromGlobals();

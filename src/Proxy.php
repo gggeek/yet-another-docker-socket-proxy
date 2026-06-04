@@ -56,10 +56,21 @@ class Proxy extends BaseProxy
      * @todo make it easy to change this from config
      * @todo allow setting a 'debug' mode in which the returned json includes the full exception message
      */
-    protected function errorResponse(ServerRequestInterface $request, \Exception|null $e = null): ResponseInterface
+    protected function errorResponse(ServerRequestInterface|null $request = null, \Throwable|null $e = null): ResponseInterface
     {
-        $this->warning('Upstream connection error for request: '  . $this->request2Log($request) . ' Error:' . $e->getMessage());
+        if ($request !== null) {
+            $this->warning('Upstream connection error for request: ' . $this->request2Log($request) . ' Error:' . $e->getMessage());
+        }
 /// @todo... make sure we mimic correctly what the Docker daemon returns by default for failed requests (try to we trigger one...)
-        return new Response(500, ['content-type' => 'application/json'], json_encode(['message' => 'error ' . $e->getCode()]));
+        return self::getErrorResponse($e);
+    }
+
+    public static function getErrorResponse(\Throwable|null $e = null): ResponseInterface
+    {
+        return new Response(
+            500,
+            ['content-type' => 'application/json'],
+            json_encode(['message' => 'error' . ($e ? ' ' . $e->getMessage() : '')])
+        );
     }
 }
