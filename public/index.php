@@ -5,14 +5,16 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Nyholm\Psr7Server\ServerRequestCreator;
-use YAWAF\Core\Filter\Bidirectional\FilterChain;
-use YAWAF\Core\Filter\Bidirectional\Tracer;
+use YADSP\Firewall\FirewallFactory;
+use YADSP\Proxy\DSFilteringProxy;
+use YADSP\Proxy\DSProxy;
 use YAWAF\Core\Logger\ErrorLogger;
 use YAWAF\Core\Logger\FileLogger;
 use YAWAF\Core\Logger\FrankenPHPLogger;
-use YADSP\Firewall\FirewallFactory;
-use YADSP\Proxy;
+use YAWAF\Core\Middleware\Dispatcher;
+use YAWAF\Core\Middleware\Tracer;
+use YAWAF\Core\ServerRequestCreator;
+use YAWAF\Core\UpstreamClient\UpstreamClientFactory;
 
 $emitter = new SapiEmitter();
 
@@ -27,7 +29,15 @@ try {
         }
     }
 
-    $upstream = Proxy::DEFAULT_UPSTREAM;
+    $psr17Factory = new Psr17Factory();
+    $creator = new ServerRequestCreator(
+        $psr17Factory, // ServerRequestFactory
+        $psr17Factory, // UriFactory
+        $psr17Factory, // UploadedFileFactory
+        $psr17Factory  // StreamFactory
+    );
+
+    $upstream = DSProxy::DEFAULT_UPSTREAM;
     if (array_key_exists('DOCKER_HOST', $_SERVER) && trim($_SERVER['DOCKER_HOST']) !== '') {
         $upstream = $_SERVER['DOCKER_HOST'];
     }
@@ -39,9 +49,9 @@ try {
         if ($config !== '') {
             throw new \Exception("Can not use at the same time env vars YADSP_CONFIG and YADSP_CONFIG_FILE");
         }
-        $filter = $firewallFactory->fromConfigFile($configFile);
+        $firewall = $firewallFactory->fromConfigFile($configFile);
     } else {
-        $filter = $firewallFactory->fromConfigString($config);
+        $firewall = $firewallFactory->fromConfigString($config);
     }
 
     // NB: the traces files will contain ALL DATA sent to and received from the Docker daemon.
@@ -50,21 +60,15 @@ try {
     //     In front, it will log what the Docker client sends/received.
     //     In the back, it will log that ise sent/received to the Docker daemon
     if (array_key_exists('YADSP_TRACE_FILE', $_SERVER) && trim($_SERVER['YADSP_TRACE_FILE']) !== '') {
-        $filter = new FilterChain([new Tracer($_SERVER['YADSP_TRACE_FILE']), $filter]);
+        $firewall = new Dispatcher([new Tracer($_SERVER['YADSP_TRACE_FILE']), $firewall]);
     }
 
-    $proxy = new Proxy($filter, $upstream, null, $logger);
-
-    $psr17Factory = new Psr17Factory();
-    $creator = new ServerRequestCreator(
-        $psr17Factory, // ServerRequestFactory
-        $psr17Factory, // UriFactory
-        $psr17Factory, // UploadedFileFactory
-        $psr17Factory  // StreamFactory
-    );
+    $httpClient = (new UpstreamClientFactory())->createClient();
+    $upstreamConnector = new DSProxy($upstream, $httpClient, $logger);
+    $proxy = new DSFilteringProxy($firewall, $upstreamConnector, $logger);
 
 } catch (\Throwable $e) {
-    $emitter->emit(Proxy::getErrorResponse($e));
+    $emitter->emit(DSFilteringProxy::getErrorResponse($e));
     exit();
 }
 

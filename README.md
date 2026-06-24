@@ -47,9 +47,9 @@ For now:
        -e YADSP_CONFIG='{"allow version info":{"url": "/version"}}'
        dunglas/frankenphp
    ```
-4. export `DOCKER_HOST=tcp://127.0.0.1:2375`
-5. test: `sudo docker ps` - this should not show any containers, despite the fact that there is one running,
-   whereas `sudo docker version` should show the Server information
+4. run `export DOCKER_HOST=tcp://127.0.0.1:2375`
+5. test: `sudo --preserve-env=DOCKER_HOST docker ps` - this should not show any containers, despite the fact that there is one running,
+   whereas `sudo --preserve-env=DOCKER_HOST docker version` should show the Server information
 
 ### With FrankenPHP
 ...
