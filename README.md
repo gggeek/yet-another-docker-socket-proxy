@@ -35,18 +35,24 @@ There are no images produced yet.
 
 For now:
 1. `git clone` this project
-2. run `composer install --classmap-authoritative`
-3. run
+2. run
    ```shell
    sudo docker run \
+       --name yadsp \
        --rm \
        -p 0.0.0.0:2375:2375 \
-       -v .:/app:ro \
+       -v .:/app \
        -v ./docker/Caddyfile:/etc/frankenphp/Caddyfile:ro \
        -v /var/run/docker.sock:/var/run/docker.sock:ro \
-       -e YADSP_CONFIG='{"allow version info":{"url": "/version"}}'
+       -e YADSP_CONFIG='{"allow version info":{"url": "/version"}}' \
        dunglas/frankenphp
    ```
+3. set up dependencies, using composer, within the container. In a 2nd terminal, run:
+  ```shell
+  sudo docker exec yadsp php -r 'chdir("/tmp"); if (!copy("https://getcomposer.org/installer", "composer-setup.php")) exit(2); if (hash_file("sha384", "composer-setup.php") === "c8b085408188070d5f52bcfe4ecfbee5f727afa458b2573b8eaaf77b3419b0bf2768dc67c86944da1544f06fa544fd47") { echo "Installer verified".PHP_EOL; } else { echo "Installer corrupt".PHP_EOL; unlink("composer-setup.php"); exit(1); } exec("php composer-setup.php"); unlink("composer-setup.php");' && \
+  sudo docker exec yadsp /tmp/composer.phar install --classmap-authoritative && \
+  sudo docker exec yadsp rm /tmp/composer.phar
+  ```
 4. run `export DOCKER_HOST=tcp://127.0.0.1:2375`
 5. test: `sudo --preserve-env=DOCKER_HOST docker ps` - this should not show any containers, despite the fact that there is one running,
    whereas `sudo --preserve-env=DOCKER_HOST docker version` should show the Server information
